@@ -10,6 +10,7 @@
     "clean": "npm run clean --workspaces",
     "clean-install": "lerna clean -y",
     "build": "lerna run build --include-dependencies",
+    "release": "npm run release:packages && npm run release:docker",
     "release:packages": "npx lerna publish --message 'chore: release' --no-private",
     "release:docker": "sh build_docker.sh"
   },
