@@ -1,12 +1,6 @@
-/**
- * Jackmail
- * 
- * Uses hyperswarm to establish a peer-to-peer connection using ed25519 keyPair.
- * Exposes an API to:
- * 1. Establish new connections using oob
- * 2. Implement the mediation protocol
- * 3. Implement Account issuance
- * 4. Implement Account verification Proof
- * 5. Implement email proxy
- * 
- */
+# DJACK SDK MONOREPO
+DJACK , the P2P network to build decentralised and peer to peer services in Cardano using Self Sovereign Credentials and Zero Knowledge proof and atala prism.
+
+Still a lot or work needs to be done, use with caution.
+
+https://djack.email is in BETA

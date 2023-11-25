@@ -1,0 +1,35 @@
+{
+  // Use IntelliSense to learn about possible attributes.
+  // Hover to view descriptions of existing attributes.
+  // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "type": "node",
+      "request": "launch",
+      "name": "SERVER",
+      "skipFiles": ["<node_internals>/**"],
+      "console": "integratedTerminal",
+      "program": "${workspaceFolder}/packages/server/build/index.js",
+      "outFiles": ["${workspaceFolder}/packages/server/build/**/*.js"],
+      "env": {
+        // "DEBUG": "libp2p:*",
+        "NODE_ENV": "development",
+        "PUBLIC_DOMAIN": "https://localhost",
+        "PUBLIC_DIDWEB_HOST": "localhost",
+        //Add your email @ local ip address
+        "TEST_EMAIL": "javier@localhost"
+      }
+    },
+    {
+      "type": "node",
+      "request": "launch",
+      "name": "SIGNAL",
+      "skipFiles": ["<node_internals>/**"],
+      "console": "integratedTerminal",
+      "program": "${workspaceFolder}/packages/signal/build/index.js",
+      "outFiles": ["${workspaceFolder}/packages/signal/build/**/*.js"],
+      "env": {}
+    }
+  ]
+}

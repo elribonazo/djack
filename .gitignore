@@ -4,16 +4,17 @@
 /node_modules
 /.pnp
 .pnp.js
-
+dist
 # testing
 /coverage
-
+*.log
 # next.js
 /.next/
 /out/
 
 # production
 /build
+.npmrc
 
 # misc
 .DS_Store
@@ -33,3 +34,18 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+.orbitdb
+**/node_modules
+**/.next
+**/build
+
+.idea/.gitignore
+.idea/jackmail.iml
+.idea/misc.xml
+.idea/modules.xml
+.idea/vcs.xml
+.idea/codeStyles/codeStyleConfig.xml
+.idea/codeStyles/Project.xml
+.idea/inspectionProfiles/Project_Default.xml
+node_modules
+build

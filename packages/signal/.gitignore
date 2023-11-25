@@ -1,0 +1,9 @@
+./crypto
+./did
+./http
+./network
+./registry
+./storage
+*.d.ts
+*.js
+*.js.map

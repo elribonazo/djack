@@ -1,0 +1,37 @@
+{
+  "name": "djack-sdk",
+  "version": "0.0.0",
+  "description": "",
+  "main": "index.js",
+  "private": "true",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "concurrently --kill-others \"lerna watch  -- lerna run dev  --scope=\\$LERNA_PACKAGE_NAME\" \"cd packages/frontend && npm run dev-start\"",
+    "clean": "npm run clean --workspaces",
+    "clean-install": "lerna clean -y",
+    "build": "lerna run build --include-dependencies",
+    "release:packages": "npx lerna publish --message 'chore: release' --no-private",
+    "release:docker": "sh build_docker.sh"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "workspaces": [
+    "packages/interfaces",
+    "packages/signal",
+    "packages/shared",
+    "packages/did-peer",
+    "packages/network",
+    "packages/server",
+    "packages/frontend"
+  ],
+  "devDependencies": {
+    "lerna": "^7.3.0",
+    "semantic-release": "^22.0.8",
+    "@semantic-release/changelog": "^6.0.3",
+    "@semantic-release/commit-analyzer": "^9.0.2",
+    "@semantic-release/exec": "^6.0.3",
+    "@semantic-release/git": "^10.0.1",
+    "@semantic-release/release-notes-generator": "^10.0.3"
+  }
+}
