@@ -13,7 +13,7 @@ import * as filters from "@libp2p/websockets/filters";
 import { supportedKeys } from "@libp2p/crypto/keys";
 import { peerIdFromKeys } from "@libp2p/peer-id";
 
-import { Ed25519PrivateKey, Ed25519PublicKey } from "@djack-sdk/did-peer";
+import { Ed25519PrivateKey, Ed25519PublicKey, PeerDID, createX25519FromEd25519KeyPair } from "@djack-sdk/did-peer";
 
 //TODO find out which of this services is causing the CPU to go up
 // import { kadDHT } from "@libp2p/kad-dht";
@@ -38,6 +38,7 @@ if (!pk || !pu || !announce) {
 
 const createHttpForPeerId = (
   peerId: PeerId,
+  peerDID: PeerDID,
   listen: string,
   announce: string
 ) =>
@@ -66,8 +67,7 @@ const createHttpForPeerId = (
                 </a>
                 <h1 class="text-sm bg-clip-text text-transparent bg-gradient-to-r from-green-400 via-pink-500 to-purple-500">I am a Circuit Relay Server on top of LIBP2P and IPFS</h1>
                 <h2 class="text-sm bg-clip-text text-transparent bg-gradient-to-r from-green-400 via-pink-500 to-purple-500">I provide ways to establish decentralised connections between parties.</h2>
-                <p class="text-xs bg-clip-text text-transparent bg-gradient-to-r from-green-400 via-pink-500 to-purple-500">Peer: ${peerId.toString()}</p> 
-                <p class="text-xs bg-clip-text text-transparent bg-gradient-to-r from-green-400 via-pink-500 to-purple-500">Address: ${announce}</p>            
+                <p class="text-xs bg-clip-text text-transparent bg-gradient-to-r from-green-400 via-pink-500 to-purple-500">Connect to this peer by using this DID: ${peerDID.toString()}</p> 
                 </div>
             </body>
           </html>`);
@@ -81,12 +81,29 @@ const ed25519KeyPair = {
   public: new Ed25519PublicKey(Buffer.from(pu, "hex")),
 };
 
+const x25519KeyPair = createX25519FromEd25519KeyPair(ed25519KeyPair);
+
+
 const peerId = await peerIdFromKeys(
   new supportedKeys.ed25519.Ed25519PublicKey(ed25519KeyPair.public.raw).bytes,
   new supportedKeys.ed25519.Ed25519PrivateKey(
     ed25519KeyPair.private.raw,
     ed25519KeyPair.public.raw
   ).bytes
+);
+
+const peerDID = new PeerDID(
+  [ed25519KeyPair, x25519KeyPair].map((keyPair) => keyPair.public),
+  [
+    {
+      id: "didcomm",
+      type: "DIDCommMessaging",
+      serviceEndpoint: {
+        uri: peerId.toString(),
+        accept: ["didcomm/v2"],
+      },
+    },
+  ]
 );
 
 const filter =
@@ -96,7 +113,7 @@ const filter =
 
 const listenAddress = `/ip4/${signalingHost}/tcp/${signalingPort}/ws`;
 
-const http = createHttpForPeerId(peerId, listenAddress, announce);
+const http = createHttpForPeerId(peerId, peerDID, listenAddress, announce);
 const websockets = webSockets({
   websocket: http.websocket._opts,
   server: http.server,
