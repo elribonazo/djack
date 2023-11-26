@@ -95,9 +95,12 @@ const createHttpForPeerId = (
           //Better build and expose the services
           const services: Service[] = [
             {
-              id: "djack-sdk",
-              serviceEndpoint: announce,
-              type: "DJACK-DIDCOMM"
+              id: "didcomm",
+              type: "DIDCommMessaging",
+              serviceEndpoint: {
+                uri: peerDID,
+                accept: ["didcomm/v2"],
+              },
             }
           ];
           return response.json({
