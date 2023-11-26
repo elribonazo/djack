@@ -2,26 +2,33 @@ version: '3'
 services:
   server:
     image: elribonazo/djack-server
+    platform: linux/amd64
     ports:
-      - "3000:8080"
+      - "3000:3000"
       - "587:587"
     environment:
-      - PORT=3000
+      - HTTP_PORT=3000
       - pk=e4d6d89de38c8159c52edc720e7bfed1ea121a46ea1b7b3fc5a0124119b2068d2bf8dcc92f59653642e14a7b1a8b97104f3585f95c31efd55b6259ec9f116b61
       - pu=2bf8dcc92f59653642e14a7b1a8b97104f3585f95c31efd55b6259ec9f116b61
-      - announce=/ip4/192.168.1.44/tcp/80/ws/p2p/12D3KooWCn1o4hxxQKeMS3rQCwbghHVQ145EUTg2pi9PUNP4DRBn
+      - RELAY_ADDRESS=/ip4/192.168.1.44/tcp/8081/ws/p2p/12D3KooWCn1o4hxxQKeMS3rQCwbghHVQ145EUTg2pi9PUNP4DRBn
       - HOST_PK=6c7cc267280c106a2f6884f00ac29b332996a65d032fcf9a94b169f64a7391751a45c2f6ae0a559081cdcac64f05040a6e652ce611d07cf72bc37232647d64d0
       - HOST_PU=1a45c2f6ae0a559081cdcac64f05040a6e652ce611d07cf72bc37232647d64d0
       - BARCELONA_PK=e4d6d89de38c8159c52edc720e7bfed1ea121a46ea1b7b3fc5a0124119b2068d2bf8dcc92f59653642e14a7b1a8b97104f3585f95c31efd55b6259ec9f116b61
       - BARCELONA_PU=2bf8dcc92f59653642e14a7b1a8b97104f3585f95c31efd55b6259ec9f116b61
       - BARCELONA_PEER=12D3KooWCn1o4hxxQKeMS3rQCwbghHVQ145EUTg2pi9PUNP4DRBn
+      - SSL_CERT_PATH=/usr/src/app/build/tls/server.crt
+      - SSL_KEY_PATH=/usr/src/app/build/tls/server.key
+    volumes:
+      - ./.tls/server.crt:/usr/src/app/build/tls/server.crt
+      - ./.tls/server.key:/usr/src/app/build/tls/server.key
 
   barcelona:
-    image: elribonazo/djack-signal
+    image: elribonazo/djack-signaling
+    platform: linux/arm64
     ports:
       - "8081:8080"
     environment:
       - PORT=8080
       - pk=e4d6d89de38c8159c52edc720e7bfed1ea121a46ea1b7b3fc5a0124119b2068d2bf8dcc92f59653642e14a7b1a8b97104f3585f95c31efd55b6259ec9f116b61
       - pu=2bf8dcc92f59653642e14a7b1a8b97104f3585f95c31efd55b6259ec9f116b61
-      - announce=/ip4/192.168.1.44/tcp/80/ws/p2p/12D3KooWCn1o4hxxQKeMS3rQCwbghHVQ145EUTg2pi9PUNP4DRBn
+      - announce=/ip4/192.168.1.44/tcp/8081/ws/p2p/12D3KooWCn1o4hxxQKeMS3rQCwbghHVQ145EUTg2pi9PUNP4DRBn
