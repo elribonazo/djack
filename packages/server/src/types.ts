@@ -15,7 +15,6 @@ export type ServerConstructorProps = {
   storage: AbstractStore;
   mail: MailServerProps;
   p2p: {
-    relays: string[];
     keyPair?: KeyPair;
   };
 };

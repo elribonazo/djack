@@ -1,26 +1,20 @@
 /* eslint-disable @typescript-eslint/no-non-null-asserted-optional-chain */
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
-import { registry } from "./registry";
 import { fileURLToPath } from "url";
-
 import fs from "fs";
 import path from "path";
-
-import { Server } from "./server/index.js";
 import { inMemory } from "@djack-sdk/shared";
-import { Network } from "@djack-sdk/network";
-
 import {
   Ed25519PrivateKey,
   Ed25519PublicKey,
   PeerDID,
-  createX25519FromEd25519KeyPair,
 } from "@djack-sdk/did-peer";
-
 import { multiaddr } from "@multiformats/multiaddr";
-import { peerIdFromString } from "@libp2p/peer-id";
 import { getResolver } from 'web-did-resolver';
-import { DIDDocument, Resolver } from "did-resolver";
+import { Resolver } from "did-resolver";
+
+import { Server } from "./server/index.js";
+import { registry } from "./registry";
 
 (async () => {
   const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -44,41 +38,7 @@ import { DIDDocument, Resolver } from "did-resolver";
     throw new Error("No HOST_RELAYS have been provided, the user will not be able to communicate outside.")
   }
 
-  const cert = fs.readFileSync(process.env.SSL_CERT_PATH);
-  const key = fs.readFileSync(process.env.SSL_KEY_PATH);
-  const mailPort = 587;
-
   const didResolver = new Resolver(await getResolver());
-  const resolvedRelays = await relays.map(async (didWeb) => {
-
-    const resolved = await didResolver.resolve(didWeb);
-    if (resolved && resolved.didDocument) {
-      const requiredService = resolved.didDocument.service?.find((service: any) => service.type === "DIDCommMessaging" && service.serviceEndpoint.accept.includes("didcomm/v2"));
-      if (!requiredService) {
-        throw new Error(`Invalid did:web (${didWeb}), does not accept didcomm/v2 DIDCommMessaging required service.`)
-      }
-      const serviceEndpoint = requiredService.serviceEndpoint;
-      if (Array.isArray(serviceEndpoint)) {
-        throw new Error(`Invalid did:web (${didWeb}), has an invalid serviceEndpoint.`)
-      }
-
-      if (typeof serviceEndpoint === "string") {
-        throw new Error(`Invalid did:web (${didWeb}), has an invalid serviceEndpoint.`)
-      }
-
-      const relayPeerDID = serviceEndpoint.uri;
-      const relayResolvedPeerDID = await PeerDID.resolve(relayPeerDID);
-
-      const requiredpeerIdService = relayResolvedPeerDID.service.find((service) => service.type === "DIDCommMessaging" && service.serviceEndpoint.accept.includes("didcomm/v2"))?.serviceEndpoint.uri as string;
-      if (!requiredpeerIdService) {
-        throw new Error(`Invalid did:web (${didWeb}), does not accept didcomm/v2 DIDCommMessaging required service.`)
-      }
-    }
-
-    throw new Error(`Could not resolve did:web (${didWeb})`)
-  })
-
-
   const ed25519KeyPair = {
     private: new Ed25519PrivateKey(
       Buffer.from(
@@ -94,77 +54,53 @@ import { DIDDocument, Resolver } from "did-resolver";
     ),
   };
 
-  const barcelonaKeyPair = {
-    private: new Ed25519PrivateKey(
-      Buffer.from(
-        process.env.BARCELONA_PK,
-        "hex"
-      )
-    ),
-    public: new Ed25519PublicKey(
-      Buffer.from(
-        process.env.BARCELONA_PU,
-        "hex"
-      )
-    ),
-  };
-
-  const x25519BarcelonaKeyPair = createX25519FromEd25519KeyPair(barcelonaKeyPair);
-
-  const barcelonaPeerId = peerIdFromString(
-    process.env.BARCELONA_PEER
-  );
-
-  const barcelonaPeerDID = new PeerDID(
-    [barcelonaKeyPair, x25519BarcelonaKeyPair].map((keyPair) => keyPair.public),
-    [
-      {
-        id: "didcomm",
-        type: "DIDCommMessaging",
-        serviceEndpoint: {
-          uri: barcelonaPeerId.toString(),
-          accept: ["didcomm/v2"],
-        },
-      },
-    ]
-  );
-
-
-  inMemory.addDIDKey(
-    barcelonaPeerDID,
-    barcelonaPeerId,
-    barcelonaKeyPair.private
-  );
-
-  inMemory.addDIDKey(
-    barcelonaPeerDID,
-    barcelonaPeerId,
-    x25519BarcelonaKeyPair.private
-  );
-
   const server = await Server.create({
-    key,
-    cert,
+    key: fs.readFileSync(process.env.SSL_KEY_PATH),
+    cert: fs.readFileSync(process.env.SSL_CERT_PATH),
     domain: "djack.email",
     mail: {
       secure: false,
-      port: mailPort,
+      port: parseInt(process.env.MAILPORT || `${587}`),
     },
     storage: inMemory,
     p2p: {
-      relays: Network.addDefaultListeners([]),
       keyPair: ed25519KeyPair,
     },
   });
 
   await server.start();
 
+  await relays.map(async (didWeb) => {
+    const resolved = await didResolver.resolve(didWeb);
+    if (resolved && resolved.didDocument) {
+      const requiredService = resolved.didDocument.service?.find((service: any) => service.type === "DIDCommMessaging" && service.serviceEndpoint.accept.includes("didcomm/v2"));
+      if (!requiredService) {
+        throw new Error(`Invalid did:web (${didWeb}), does not accept didcomm/v2 DIDCommMessaging required service.`)
+      }
+      const serviceEndpoint = requiredService.serviceEndpoint;
+      if (Array.isArray(serviceEndpoint)) {
+        throw new Error(`Invalid did:web (${didWeb}), has an invalid serviceEndpoint.`)
+      }
+      if (typeof serviceEndpoint === "string") {
+        throw new Error(`Invalid did:web (${didWeb}), has an invalid serviceEndpoint.`)
+      }
+      const relayPeerDID = serviceEndpoint.uri;
+      const relayResolvedPeerDID = await PeerDID.resolve(relayPeerDID);
+      const relayAddress = relayResolvedPeerDID.service.find((service) => service.type === "DIDCommMessaging" && service.serviceEndpoint.accept.includes("didcomm/v2"))?.serviceEndpoint.uri as string;
+      if (!relayAddress) {
+        throw new Error(`Invalid did:web (${didWeb}), does not accept didcomm/v2 DIDCommMessaging required service.`)
+      }
 
-  await server.network.dial(
-    multiaddr(
-      process.env.RELAY_ADDRESS
-    )
-  );
+      await server.network.dial(
+        multiaddr(
+          relayAddress
+        )
+      );
+    }
+    throw new Error(`Could not resolve did:web (${didWeb})`)
+  })
+
+
 
   server.network.p2p.addEventListener("self:peer:update", (evt) => {
     const addresses = server.network.p2p.getMultiaddrs();
