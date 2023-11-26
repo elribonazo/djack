@@ -15,6 +15,7 @@ import { Resolver } from "did-resolver";
 
 import { Server } from "./server/index.js";
 import { registry } from "./registry";
+import { DID } from "@djack-sdk/interfaces";
 
 (async () => {
   const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -85,12 +86,11 @@ import { registry } from "./registry";
         throw new Error(`Invalid did:web (${didWeb}), has an invalid serviceEndpoint.`)
       }
       const relayPeerDID = serviceEndpoint.uri;
-      const relayResolvedPeerDID = await PeerDID.resolve(relayPeerDID);
+      const relayResolvedPeerDID = await PeerDID.resolve(DID.fromString(relayPeerDID));
       const relayAddress = relayResolvedPeerDID.service.find((service) => service.type === "DIDCommMessaging" && service.serviceEndpoint.accept.includes("didcomm/v2"))?.serviceEndpoint.uri as string;
       if (!relayAddress) {
         throw new Error(`Invalid did:web (${didWeb}), does not accept didcomm/v2 DIDCommMessaging required service.`)
       }
-
       await server.network.dial(
         multiaddr(
           relayAddress
@@ -99,8 +99,6 @@ import { registry } from "./registry";
     }
     throw new Error(`Could not resolve did:web (${didWeb})`)
   })
-
-
 
   server.network.p2p.addEventListener("self:peer:update", (evt) => {
     const addresses = server.network.p2p.getMultiaddrs();
