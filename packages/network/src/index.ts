@@ -12,20 +12,21 @@ import type { StreamHandler } from "@libp2p/interface/stream-handler";
 import { Multiaddr } from "@multiformats/multiaddr";
 import { Buffer } from "buffer/index.js";
 import {
-  Curve,
-  DIDUrl,
-  DID,
   ExportFormats,
   CreateNodeOptions,
   NodeOptions,
   PROTOCOLS,
   Handlers,
-  KeyPair,
   RegistryInterface,
   StorageInterface,
   NODE_SERVICES,
   DEFAULT_SERVICES,
+  ExportableEd25519PrivateKey,
+  ExportableEd25519PublicKey,
+  AbstractExportingKey,
 } from "@djack-sdk/interfaces";
+import { Domain } from '@atala/prism-wallet-sdk';
+
 import type { DIDFactory } from "@djack-sdk/did-peer";
 import {
   PeerDID,
@@ -36,6 +37,7 @@ import {
 } from "@djack-sdk/did-peer";
 import { AnoncredsLoader } from "./AnoncredsLoader";
 import { getDidcommLibInstance } from "./didcomm";
+import { didUrlFromString } from "@djack-sdk/shared";
 
 export * from "./Task";
 export * from "./AnoncredsLoader";
@@ -70,10 +72,10 @@ export class Network<T extends Record<string, unknown> = DEFAULT_SERVICES> {
   public static didcomm: typeof import("didcomm-node");
   public static _anoncreds: AnoncredsLoader | undefined;
   private handlers: Handlers[] = [];
-  public did: DID;
+  public did: Domain.DID;
   public didWebHostname: string;
-  public peerdid: DID;
-  public cardanoDID: DID;
+  public peerdid: Domain.DID;
+  public cardanoDID: Domain.DID;
 
   public p2p: Libp2p<NODE_SERVICES<T>>;
   public storage: StorageInterface;
@@ -128,15 +130,17 @@ export class Network<T extends Record<string, unknown> = DEFAULT_SERVICES> {
     return Network._anoncreds;
   }
 
-  private static async generateKeyPair(): Promise<KeyPair> {
+  private static async generateKeyPair(): Promise<Domain.KeyPair> {
     const prv = await generateKeyPair("Ed25519");
 
-    const ed25519Prv = new Ed25519PrivateKey(prv.marshal());
+    const ed25519Prv = new ExportableEd25519PrivateKey(prv.marshal());
 
-    const ed25519Pub = new Ed25519PublicKey(prv.public.marshal());
-    const ed25519KeyPair: KeyPair = {
-      private: ed25519Prv,
-      public: ed25519Pub,
+    const ed25519Pub = new ExportableEd25519PublicKey(prv.public.marshal());
+
+    const ed25519KeyPair: Domain.KeyPair = {
+      curve: Domain.Curve.ED25519,
+      privateKey: ed25519Prv,
+      publicKey: ed25519Pub,
     };
 
     return ed25519KeyPair;
@@ -169,28 +173,28 @@ export class Network<T extends Record<string, unknown> = DEFAULT_SERVICES> {
 
     const ed25519KeyPair = keyPair ? keyPair : await this.generateKeyPair();
 
-    const x25519KeyPair: KeyPair =
+    const x25519KeyPair: Domain.KeyPair =
       createX25519FromEd25519KeyPair(ed25519KeyPair);
 
     const peerId = await peerIdFromKeys(
-      new supportedKeys.ed25519.Ed25519PublicKey(ed25519KeyPair.public.raw)
+      new supportedKeys.ed25519.Ed25519PublicKey(ed25519KeyPair.publicKey.raw)
         .bytes,
       new supportedKeys.ed25519.Ed25519PrivateKey(
-        ed25519KeyPair.private.raw,
-        ed25519KeyPair.public.raw
+        ed25519KeyPair.privateKey.raw,
+        ed25519KeyPair.publicKey.raw
       ).bytes
     );
 
     const keyPairs = [ed25519KeyPair, x25519KeyPair];
-    const privateKeys = keyPairs.map((keyPair) => keyPair.private);
-    const did = new DID(
+    const privateKeys = keyPairs.map((keyPair) => keyPair.privateKey);
+    const did = new Domain.DID(
       "did",
       "web",
       `${options.didWebHostname}:peers:${peerId.toString()}`
     );
 
     const peerDID = new PeerDID(
-      keyPairs.map((keyPair) => keyPair.public),
+      keyPairs.map((keyPair) => keyPair.publicKey),
       this.getServicesForPeerDID(peerId)
     );
 
@@ -249,15 +253,15 @@ export class Network<T extends Record<string, unknown> = DEFAULT_SERVICES> {
         }
         : {
           cardanoDID: new PeerDID(
-            [ed25519KeyPair.public, x25519KeyPair.public],
+            [ed25519KeyPair.publicKey, x25519KeyPair.publicKey],
             [
               {
                 id: "didcomm",
                 type: "DIDCommMessaging",
                 serviceEndpoint: {
                   uri: new PeerDID([
-                    ed25519KeyPair.public,
-                    x25519KeyPair.public,
+                    ed25519KeyPair.publicKey,
+                    x25519KeyPair.publicKey,
                   ]).toString(),
                   accept: ["didcomm/v2"],
                 },
@@ -313,7 +317,7 @@ export class Network<T extends Record<string, unknown> = DEFAULT_SERVICES> {
 
   get didResolver() {
     return {
-      resolve: async (did: string) => PeerDID.resolve(DID.fromString(did)),
+      resolve: async (did: string) => PeerDID.resolve(Domain.DID.fromString(did)),
     };
   }
 
@@ -322,7 +326,7 @@ export class Network<T extends Record<string, unknown> = DEFAULT_SERVICES> {
       find_secrets: async (secretIds: string[]) => {
         const peerDIDs = await this.storage.store.findAllDIDs();
         const found = secretIds.filter((secretId) => {
-          const secretDID = DIDUrl.fromString(secretId);
+          const secretDID = didUrlFromString(secretId);
           return peerDIDs.find(
             (secretPeerDID: any) =>
               secretPeerDID.toString() === secretDID.did.toString()
@@ -332,7 +336,7 @@ export class Network<T extends Record<string, unknown> = DEFAULT_SERVICES> {
       },
       get_secret: async (secretId: string) => {
         const peerDIDs = await this.storage.store.findAllDIDs();
-        const secretDID = DIDUrl.fromString(secretId);
+        const secretDID = didUrlFromString(secretId);
         const found = peerDIDs.filter((peerDIDSecret: any) => {
           return secretDID.did.toString() === peerDIDSecret.toString();
         });
@@ -343,11 +347,12 @@ export class Network<T extends Record<string, unknown> = DEFAULT_SERVICES> {
               (v: any) => v.id === secretId
             );
             if (verificationMethod) {
-              const keys = await this.storage.store.findKeysByDID({
+              const privateKeyRecords = await this.storage.store.findKeysByDID({
                 did: found.map((did) => did.toString()),
               });
+              const keys = privateKeyRecords.filter((record) => (record as unknown as AbstractExportingKey).canExport()) as unknown as AbstractExportingKey[]
               const foundPriv = keys.find(
-                ({ type }: any) => type === Curve.X25519
+                ({ type }: any) => type === Domain.Curve.X25519
               );
               if (foundPriv) {
                 const secret: Secret = {

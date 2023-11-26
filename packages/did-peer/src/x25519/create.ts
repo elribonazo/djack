@@ -3,26 +3,23 @@ import {
   convertSecretKeyToX25519,
 } from "@stablelib/ed25519";
 
-import type { KeyPair } from "@djack-sdk/interfaces";
-import { Curve } from "@djack-sdk/interfaces";
-import { X25519PublicKey } from "./PublicKey";
-import { X25519PrivateKey } from "./PrivateKey";
-import { Ed25519PublicKey } from "../ed25519/PublicKey";
+import { Domain, X25519PrivateKey, X25519PublicKey, Ed25519PublicKey } from '@atala/prism-wallet-sdk';
 
-export function createX25519FromEd25519KeyPair(keyPair: KeyPair): KeyPair {
+export function createX25519FromEd25519KeyPair(keyPair: Domain.KeyPair): Domain.KeyPair {
   if (
-    keyPair.private.curve !== Curve.ED25519 ||
-    keyPair.public.curve !== Curve.ED25519
+    keyPair.privateKey.curve !== Domain.Curve.ED25519 ||
+    keyPair.publicKey.curve !== Domain.Curve.ED25519
   ) {
     throw new Error("Invalid key curve");
   }
 
-  const x25519Private = convertSecretKeyToX25519(keyPair.private.raw);
-  const x25519Public = convertPublicKeyToX25519(keyPair.public.raw);
+  const x25519Private = convertSecretKeyToX25519(keyPair.privateKey.raw);
+  const x25519Public = convertPublicKeyToX25519(keyPair.publicKey.raw);
 
   return {
-    public: new X25519PublicKey(x25519Public),
-    private: new X25519PrivateKey(x25519Private),
+    curve: Domain.Curve.X25519,
+    publicKey: new X25519PublicKey(x25519Public),
+    privateKey: new X25519PrivateKey(x25519Private),
   };
 }
 

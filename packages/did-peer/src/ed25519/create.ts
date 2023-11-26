@@ -1,12 +1,15 @@
-import { KeyPair } from "@djack-sdk/interfaces";
-import { generateKeyPair } from "@stablelib/ed25519";
-import { Ed25519PrivateKey } from "./PrivateKey";
-import { Ed25519PublicKey } from "./PublicKey";
+import { Domain, Apollo } from '@atala/prism-wallet-sdk';
 
-export function createEd25519KeyPair(): KeyPair {
-  const keyPair = generateKeyPair();
+const apollo = new Apollo();
+
+export function createEd25519KeyPair(): Domain.KeyPair {
+  const privateKey = apollo.createPrivateKey({
+    type: Domain.KeyTypes.EC,
+    curve: Domain.Curve.ED25519,
+  });
   return {
-    private: new Ed25519PrivateKey(keyPair.secretKey),
-    public: new Ed25519PublicKey(keyPair.publicKey),
+    curve: Domain.Curve.ED25519,
+    privateKey: privateKey,
+    publicKey: privateKey.publicKey(),
   };
 }

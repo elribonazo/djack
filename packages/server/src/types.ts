@@ -1,5 +1,6 @@
-import { AbstractStore, DID, KeyPair } from "@djack-sdk/interfaces";
+import { AbstractStore } from "@djack-sdk/interfaces";
 import { ParsedMail } from "mailparser";
+import { Domain } from '@atala/prism-wallet-sdk';
 
 export type onMailType = (mail: ParsedMail) => void | Promise<void>;
 export type MailServerProps = {
@@ -15,7 +16,7 @@ export type ServerConstructorProps = {
   storage: AbstractStore;
   mail: MailServerProps;
   p2p: {
-    keyPair?: KeyPair;
+    keyPair?: Domain.KeyPair;
   };
 };
 
@@ -30,8 +31,8 @@ export enum AKEY {
 }
 
 export type Account<
-  ACCOUNT_DID = DID,
-  PEERDID = DID,
+  ACCOUNT_DID = Domain.DID,
+  PEERDID = Domain.DID,
   EMAIL = string,
   CredentialDefinitionId = string,
   CredentialSchemaId = string,

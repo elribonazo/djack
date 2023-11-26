@@ -13,8 +13,10 @@ import * as filters from "@libp2p/websockets/filters";
 import { supportedKeys } from "@libp2p/crypto/keys";
 import { peerIdFromKeys } from "@libp2p/peer-id";
 import { inMemory } from "@djack-sdk/shared";
-import { Ed25519PrivateKey, Ed25519PublicKey, PeerDID, createEd25519KeyPair, createX25519FromEd25519KeyPair } from "@djack-sdk/did-peer";
+import { createEd25519KeyPair, createX25519FromEd25519KeyPair } from "@djack-sdk/did-peer";
 import { Service } from "didcomm-node";
+import { Domain } from '@atala/prism-wallet-sdk';
+import { AbstractExportingKey, ExportFormats, ExportableEd25519PrivateKey, ExportableEd25519PublicKey } from "@djack-sdk/interfaces";
 
 // TODO find out which of this services is causing the CPU to go up
 // import { kadDHT } from "@libp2p/kad-dht";
@@ -26,7 +28,7 @@ import { Service } from "didcomm-node";
 // import { ipnsValidator } from "ipns/validator";
 
 import HTTP from "./http.js";
-import { Curve, ExportFormats } from "@djack-sdk/interfaces";
+
 const signalingPort = parseInt(`${process.env.PORT || 8080}`);
 const signalingHost = process.env.HOST || "0.0.0.0";
 const domain = process.env.PUBLIC_DOMAIN || 'localhost';
@@ -66,8 +68,9 @@ const createHttpForPeerId = (
         method: "get",
         url: "/.well-known/did.json",
         route: async (request, response) => {
-          const records = await inMemory.findKeysByDID({ peerId: peerId.toString() });
-
+          const privateKeyRecords = await inMemory.findKeysByDID({ peerId: peerId.toString() });
+          //TODO: Remove this code when prism sdk releases this
+          const records = privateKeyRecords.filter((record) => (record as unknown as AbstractExportingKey).canExport()) as unknown as AbstractExportingKey[]
           if (records.length <= 0) {
             return response.status(404).json({ success: false });
           }
@@ -79,18 +82,28 @@ const createHttpForPeerId = (
           const domainDID = `did:web:${domain}`;
           records.forEach((record, index) => {
             const JWK = record.export(ExportFormats.JWK);
-            if (record.type === Curve.ED25519) {
-              authentication.push(`${domainDID}#key-${index}`);
-              assertionMethod.push(`${domainDID}#key-${index}`);
-            } else if (record.type === Curve.X25519) {
-              keyAgreement.push(`${domainDID}#key-${index}`);
+            if (record.type === Domain.KeyTypes.EC) {
+              if (record.isCurve(Domain.Curve.ED25519)) {
+                authentication.push(`${domainDID}#key-${index}`);
+                assertionMethod.push(`${domainDID}#key-${index}`);
+                verificationMethods.push({
+                  id: `${domainDID}#key-${index}`,
+                  type: "JsonWebKey2020",
+                  controller: domainDID,
+                  publicKeyJwk: JSON.parse(Buffer.from(JWK).toString()),
+                });
+              }
+            } else if (record.type === Domain.KeyTypes.Curve25519) {
+              if (record.isCurve(Domain.Curve.X25519)) {
+                keyAgreement.push(`${domainDID}#key-${index}`);
+                verificationMethods.push({
+                  id: `${domainDID}#key-${index}`,
+                  type: "JsonWebKey2020",
+                  controller: domainDID,
+                  publicKeyJwk: JSON.parse(Buffer.from(JWK).toString()),
+                });
+              }
             }
-            verificationMethods.push({
-              id: `${domainDID}#key-${index}`,
-              type: "JsonWebKey2020",
-              controller: domainDID,
-              publicKeyJwk: JSON.parse(Buffer.from(JWK).toString()),
-            });
           });
           //Better build and expose the services
           const services: Service[] = [
@@ -153,8 +166,8 @@ const createHttpForPeerId = (
   });
 
 const ed25519KeyPair = {
-  private: new Ed25519PrivateKey(Buffer.from(pk, "hex")),
-  public: new Ed25519PublicKey(Buffer.from(pu, "hex")),
+  private: new ExportableEd25519PrivateKey(Buffer.from(pk, "hex")),
+  public: new ExportableEd25519PublicKey(Buffer.from(pu, "hex")),
 };
 
 const x25519KeyPair = createX25519FromEd25519KeyPair(ed25519KeyPair);

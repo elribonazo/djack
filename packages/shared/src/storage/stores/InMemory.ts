@@ -1,7 +1,8 @@
-import { DID, PrivateKey, AbstractStore } from "@djack-sdk/interfaces";
+import { AbstractStore } from "@djack-sdk/interfaces";
 import { type PeerId } from "@libp2p/interface-peer-id";
+import { Domain } from '@atala/prism-wallet-sdk';
 
-const data: { keys: { did: DID; peerId: PeerId; key: PrivateKey }[] } = {
+const data: { keys: { did: Domain.DID; peerId: PeerId; key: Domain.PrivateKey }[] } = {
   keys: [],
 };
 
@@ -9,7 +10,7 @@ class InMemory implements AbstractStore {
   async findKeysByDID(search: {
     did?: string | string[] | undefined;
     peerId?: string | string[] | undefined;
-  }): Promise<PrivateKey[]> {
+  }): Promise<Domain.PrivateKey[]> {
     const keys = data.keys
       .filter((key) => {
         if (!search || (!search.did && !search.peerId)) {
@@ -33,11 +34,11 @@ class InMemory implements AbstractStore {
       .map((record) => record.key);
     return keys;
   }
-  async findAllDIDs(): Promise<DID[]> {
+  async findAllDIDs(): Promise<Domain.DID[]> {
     const keys = data.keys.map((record) => record.did);
     return keys;
   }
-  async addDIDKey(did: DID, peerId: PeerId, key: PrivateKey): Promise<void> {
+  async addDIDKey(did: Domain.DID, peerId: PeerId, key: Domain.PrivateKey): Promise<void> {
     data.keys.push({
       did,
       key,

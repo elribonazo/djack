@@ -1,4 +1,4 @@
-import { ExportFormats, Curve } from "@djack-sdk/interfaces";
+import { ExportFormats, AbstractExportingKey } from "@djack-sdk/interfaces";
 import { Network } from "@djack-sdk/network";
 import { Service } from "didcomm-node";
 import { DEFAULT_PUBLIC_DOMAIN } from "../Config";
@@ -8,6 +8,7 @@ import {
   CredentialDefinition,
   KeyCorrectnessProof,
 } from "@hyperledger/anoncreds-nodejs";
+import { Domain } from '@atala/prism-wallet-sdk';
 
 export async function credentialSchemaResolver(
   schemaId: string,
@@ -58,7 +59,9 @@ export async function credentialDefinitionResolver(
   };
 }
 export async function resolveLocalDIDWEB(network: Network, did: string) {
-  const records = await network.storage.store.findKeysByDID({ did: did });
+  const privateKeyRecords = await network.storage.store.findKeysByDID({ did: did });
+  const records = privateKeyRecords.filter((record) => (record as unknown as AbstractExportingKey).canExport()) as unknown as AbstractExportingKey[]
+
   if (records.length <= 0) {
     throw new Error("NOT FOUND");
   }
@@ -72,18 +75,28 @@ export async function resolveLocalDIDWEB(network: Network, did: string) {
 
   records.forEach((record, index) => {
     const JWK = record.export(ExportFormats.JWK);
-    if (record.type === Curve.ED25519) {
-      authentication.push(`${domainDID}#key-${index}`);
-      assertionMethod.push(`${domainDID}#key-${index}`);
-    } else if (record.type === Curve.X25519) {
-      keyAgreement.push(`${domainDID}#key-${index}`);
+    if (record.type === Domain.KeyTypes.EC) {
+      if (record.isCurve(Domain.Curve.ED25519)) {
+        authentication.push(`${domainDID}#key-${index}`);
+        assertionMethod.push(`${domainDID}#key-${index}`);
+        verificationMethods.push({
+          id: `${domainDID}#key-${index}`,
+          type: "JsonWebKey2020",
+          controller: domainDID,
+          publicKeyJwk: JSON.parse(Buffer.from(JWK).toString()),
+        });
+      }
+    } else if (record.type === Domain.KeyTypes.Curve25519) {
+      if (record.isCurve(Domain.Curve.X25519)) {
+        keyAgreement.push(`${domainDID}#key-${index}`);
+        verificationMethods.push({
+          id: `${domainDID}#key-${index}`,
+          type: "JsonWebKey2020",
+          controller: domainDID,
+          publicKeyJwk: JSON.parse(Buffer.from(JWK).toString()),
+        });
+      }
     }
-    verificationMethods.push({
-      id: `${domainDID}#key-${index}`,
-      type: "JsonWebKey2020",
-      controller: domainDID,
-      publicKeyJwk: JSON.parse(Buffer.from(JWK).toString()),
-    });
   });
 
   const services: Service[] = [

@@ -1,4 +1,3 @@
-import { DID } from "@djack-sdk/interfaces";
 import { CredentialIssueMessage, Network } from "@djack-sdk/network";
 import {
   CredentialOffer,
@@ -8,6 +7,8 @@ import {
 } from "@hyperledger/anoncreds-nodejs";
 import { IncomingStreamData } from "@libp2p/interface/stream-handler";
 import { pipe } from "it-pipe";
+import { Domain } from '@atala/prism-wallet-sdk';
+
 import { AccountArray } from "../account";
 
 async function credentialIssueHandle(
@@ -60,8 +61,8 @@ async function credentialIssueHandle(
       const toIssueHolder = message.as_value().from!;
 
       accounts.push([
-        DID.fromString(cardanoDID),
-        DID.fromString(toIssueHolder),
+        Domain.DID.fromString(cardanoDID),
+        Domain.DID.fromString(toIssueHolder),
         body.email,
         body.offer.cred_def_id,
         body.offer.schema_id,

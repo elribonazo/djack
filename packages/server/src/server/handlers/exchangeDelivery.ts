@@ -12,9 +12,10 @@ import {
   ExchangeRequestPresentationMessage,
   Network,
 } from "@djack-sdk/network";
-import { DID, PROTOCOLS, toDIDCOMMType } from "@djack-sdk/interfaces";
+import { PROTOCOLS, toDIDCOMMType } from "@djack-sdk/interfaces";
 import { REPEAT_EMAIL_EVERY_MS } from "../../Config";
 import Email from "../../email";
+import { Domain } from '@atala/prism-wallet-sdk';
 
 async function exchangeDelivery(
   data: IncomingStreamData,
@@ -117,8 +118,8 @@ async function exchangeDelivery(
         }
         if (valid) {
           accounts.push([
-            DID.fromString(cardanoDID),
-            DID.fromString(holder),
+            Domain.DID.fromString(cardanoDID),
+            Domain.DID.fromString(holder),
             email,
             credentialDefinitionId,
             credentialSchemaId,

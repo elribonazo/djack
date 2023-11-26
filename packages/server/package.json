@@ -24,6 +24,7 @@
     "djack-server": "./.bin/djack-server"
   },
   "dependencies": {
+    "@atala/prism-wallet-sdk": "^3.1.0",
     "@aviarytech/did-peer": "^0.0.21",
     "@djack-sdk/did-peer": "^0.1.13",
     "@djack-sdk/interfaces": "^0.1.13",

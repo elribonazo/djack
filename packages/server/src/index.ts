@@ -5,14 +5,14 @@ import fs from "fs";
 import path from "path";
 import { inMemory, resolveRelayAddressFromDIDWEB } from "@djack-sdk/shared";
 import {
-  Ed25519PrivateKey,
-  Ed25519PublicKey,
   PeerDID,
 } from "@djack-sdk/did-peer";
 import { getResolver } from 'web-did-resolver';
 import { Resolver } from "did-resolver";
 import { Server } from "./server/index.js";
 import { registry } from "./registry";
+import { Domain } from '@atala/prism-wallet-sdk';
+import { ExportableEd25519PrivateKey, ExportableEd25519PublicKey } from "@djack-sdk/interfaces";
 
 (async () => {
   const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -37,14 +37,15 @@ import { registry } from "./registry";
   }
 
   const didResolver = new Resolver(await getResolver());
-  const ed25519KeyPair = {
-    private: new Ed25519PrivateKey(
+  const ed25519KeyPair: Domain.KeyPair = {
+    curve: Domain.Curve.ED25519,
+    privateKey: new ExportableEd25519PrivateKey(
       Buffer.from(
         process.env.HOST_PK,
         "hex"
       )
     ),
-    public: new Ed25519PublicKey(
+    publicKey: new ExportableEd25519PublicKey(
       Buffer.from(
         process.env.HOST_PU,
         "hex"

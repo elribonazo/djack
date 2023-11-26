@@ -4,15 +4,12 @@ import { peerIdFromKeys } from "@libp2p/peer-id";
 import { supportedKeys } from "@libp2p/crypto/keys";
 
 import {
-  KeyPair,
   DIDFactoryAbstract,
   StorageInterface,
 } from "@djack-sdk/interfaces";
 
-import { Ed25519PrivateKey } from "./ed25519/PrivateKey";
-import { Ed25519PublicKey } from "./ed25519/PublicKey";
+import { Domain, Ed25519PrivateKey, Ed25519PublicKey } from '@atala/prism-wallet-sdk';
 
-import { PeerDID } from "./Peer";
 import { createX25519FromEd25519KeyPair } from "./x25519/create";
 
 export class DIDFactory implements DIDFactoryAbstract {
@@ -21,23 +18,24 @@ export class DIDFactory implements DIDFactoryAbstract {
   async createPeerDID(services: Service[] = []) {
     const edPrivate = await supportedKeys.ed25519.generateKeyPair();
 
-    const edKeyPair: KeyPair = {
-      private: new Ed25519PrivateKey(edPrivate.marshal()),
-      public: new Ed25519PublicKey(edPrivate.public.marshal()),
+    const edKeyPair: Domain.KeyPair = {
+      curve: Domain.Curve.ED25519,
+      privateKey: new Ed25519PrivateKey(edPrivate.marshal()),
+      publicKey: new Ed25519PublicKey(edPrivate.public.marshal()),
     };
 
-    const xKeyPair: KeyPair = createX25519FromEd25519KeyPair(edKeyPair);
+    const xKeyPair: Domain.KeyPair = createX25519FromEd25519KeyPair(edKeyPair);
     const keyPairs = [edKeyPair, xKeyPair];
 
-    const publicKeys = keyPairs.map((keyPair) => keyPair.public);
-    const privateKeys = keyPairs.map((keyPair) => keyPair.private);
-    const did = new PeerDID(publicKeys, services);
+    const publicKeys = keyPairs.map((keyPair) => keyPair.publicKey);
+    const privateKeys = keyPairs.map((keyPair) => keyPair.privateKey);
+    const did = PeerDIDCreate.createPeerDID(publicKeys, services);
 
     const peerId = await peerIdFromKeys(
-      new supportedKeys.ed25519.Ed25519PublicKey(edKeyPair.public.raw).bytes,
+      new supportedKeys.ed25519.Ed25519PublicKey(edKeyPair.publicKey.raw).bytes,
       new supportedKeys.ed25519.Ed25519PrivateKey(
-        edKeyPair.private.raw,
-        edKeyPair.public.raw
+        edKeyPair.privateKey.raw,
+        edKeyPair.publicKey.raw
       ).bytes
     );
 
@@ -48,10 +46,10 @@ export class DIDFactory implements DIDFactoryAbstract {
     return did;
   }
 
-  async createPeerDIDWithKeys(keyPairs: KeyPair[], services: Service[] = []) {
-    const publicKeys = keyPairs.map((keyPair) => keyPair.public);
-    const privateKeys = keyPairs.map((keyPair) => keyPair.private);
-    const did = new PeerDID(publicKeys, services);
+  async createPeerDIDWithKeys(keyPairs: Domain.KeyPair[], services: Service[] = []) {
+    const publicKeys = keyPairs.map((keyPair) => keyPair.publicKey);
+    const privateKeys = keyPairs.map((keyPair) => keyPair.privateKey);
+    const did = PeerDIDCreate.createPeerDID(publicKeys, services);
 
     const peerId = await peerIdFromKeys(
       new supportedKeys.ed25519.Ed25519PublicKey(publicKeys[0].raw).bytes,

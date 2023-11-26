@@ -10,9 +10,4 @@ export type PeerDIDComposition<
 
 export * from "./Factory";
 export * from "./x25519/create";
-export * from "./x25519/PublicKey";
-export * from "./x25519/PrivateKey";
-export * from "./ed25519/PublicKey";
-export * from "./ed25519/PrivateKey";
 export * from "./ed25519/create";
-export * from "./Peer";

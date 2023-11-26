@@ -1,5 +1,3 @@
-import { Buffer } from "buffer/index.js";
-import { base64url } from "multiformats/bases/base64";
 import type { PeerId } from "@libp2p/interface-peer-id";
 import type { StreamHandler } from "@libp2p/interface/stream-handler";
 import type { Libp2p } from "libp2p";
@@ -10,14 +8,98 @@ import { type Transport } from "@libp2p/interface/transport";
 import { RecursivePartial } from "@libp2p/interface";
 import { Components } from "libp2p/components";
 import { PeerDiscovery } from "@libp2p/interface/peer-discovery";
+import { Domain, Ed25519PrivateKey, Ed25519PublicKey, X25519PrivateKey, X25519PublicKey } from '@atala/prism-wallet-sdk';
+
+export enum ExportFormats {
+  JWK = "JWK",
+}
+
+export abstract class AbstractExportingKey extends Domain.Key {
+  abstract export(format: ExportFormats): Uint8Array;
+  abstract canExport(): this is AbstractExportingKey;
+}
+
+export class ExportableEd25519PublicKey extends Ed25519PublicKey implements AbstractExportingKey {
+  canExport(): this is AbstractExportingKey {
+    return "export" in this;
+  }
+  export(format: ExportFormats): Uint8Array {
+    if (format === ExportFormats.JWK) {
+      return Buffer.from(
+        JSON.stringify({
+          crv: this.curve,
+          kty: "OKP",
+          x: Buffer.from(this.getEncoded()).toString('base64url'),
+        })
+      );
+    }
+    throw new Error("Method not implemented.");
+  }
+}
+
+export class ExportableEd25519PrivateKey extends Ed25519PrivateKey implements AbstractExportingKey {
+  canExport(): this is AbstractExportingKey {
+    return "export" in this;
+  }
+  export(format: ExportFormats): Uint8Array {
+    if (format === ExportFormats.JWK) {
+      return Buffer.from(
+        JSON.stringify({
+          crv: this.curve,
+          kty: "OKP",
+          x: Buffer.from(this.publicKey().getEncoded()).toString('base64url'),
+          d: Buffer.from(this.getEncoded()).toString('base64url'),
+        })
+      );
+    }
+    throw new Error("Method not implemented.");
+  }
+}
+
+export class ExportableX25519PublicKey extends X25519PublicKey implements AbstractExportingKey {
+  canExport(): this is AbstractExportingKey {
+    return "export" in this;
+  }
+  export(format: ExportFormats): Uint8Array {
+    if (format === ExportFormats.JWK) {
+      return Buffer.from(
+        JSON.stringify({
+          crv: this.curve,
+          kty: "OKP",
+          x: Buffer.from(this.getEncoded()).toString('base64url'),
+        })
+      );
+    }
+    throw new Error("Method not implemented.");
+  }
+}
+
+export class ExportableX25519PrivateKey extends X25519PrivateKey implements AbstractExportingKey {
+  canExport(): this is AbstractExportingKey {
+    return "export" in this;
+  }
+  export(format: ExportFormats): Uint8Array {
+    if (format === ExportFormats.JWK) {
+      return Buffer.from(
+        JSON.stringify({
+          crv: this.curve,
+          kty: "OKP",
+          x: Buffer.from(this.publicKey().getEncoded()).toString('base64url'),
+          d: Buffer.from(this.getEncoded()).toString('base64url'),
+        })
+      );
+    }
+    throw new Error("Method not implemented.");
+  }
+}
 
 export abstract class AbstractStore {
   abstract findKeysByDID(search?: {
     did?: string | string[];
     peerId?: string | string[];
-  }): Promise<PrivateKey[]>;
-  abstract addDIDKey(did: DID, peerId: PeerId, key: PrivateKey): Promise<void>;
-  abstract findAllDIDs(): Promise<DID[]>;
+  }): Promise<Domain.PrivateKey[]>;
+  abstract addDIDKey(did: Domain.DID, peerId: PeerId, key: Domain.PrivateKey): Promise<void>;
+  abstract findAllDIDs(): Promise<Domain.DID[]>;
 }
 export type StorageInterface = { store: AbstractStore };
 export type RegistryInterface = {
@@ -46,7 +128,7 @@ export function fromDIDCOMMType(type: string) {
   const convertProtocol = type.replace(protocolDomain, "");
   const protocolValue =
     Object.keys(PROTOCOLS)[
-      Object.values(PROTOCOLS).findIndex((value) => value === convertProtocol)
+    Object.values(PROTOCOLS).findIndex((value) => value === convertProtocol)
     ];
   if (protocolValue in PROTOCOLS) {
     console.log(`Protocol from JSON ${protocolValue}`);
@@ -64,8 +146,8 @@ export type Handlers<Protocol = string, Handler = StreamHandler> = [
 
 export type DIDFactoryAbstract = {
   storage: StorageInterface;
-  createPeerDID(services: Service[]): Promise<DID>;
-  createPeerDIDWithKeys(keyPairs: KeyPair[], services: Service[]): Promise<DID>;
+  createPeerDID(services: Service[]): Promise<Domain.DID>;
+  createPeerDIDWithKeys(keyPairs: Domain.KeyPair[], services: Service[]): Promise<Domain.DID>;
 };
 
 export type DEFAULT_SERVICES = {
@@ -85,10 +167,10 @@ export type NODE_SERVICES<T extends Record<string, any>> = DEFAULT_SERVICES &
 export type CreateNodeOptions<
   T extends Record<string, unknown> = DEFAULT_SERVICES
 > = {
-  keyPair?: KeyPair;
+  keyPair?: Domain.KeyPair;
   domain: string;
   didWebHostname: string;
-  publicKeys?: PublicKey[];
+  publicKeys?: Domain.PublicKey[];
   listen: string[];
   storage: StorageInterface;
   factory: DIDFactoryAbstract;
@@ -102,221 +184,8 @@ export type CreateNodeOptions<
 
 export interface NodeOptions<T extends Record<string, unknown>>
   extends ExcludeKeys<CreateNodeOptions<T>, "publicKeys"> {
-  did: DID;
-  cardanoDID: DID;
-  peerdid: DID;
+  did: Domain.DID;
+  cardanoDID: Domain.DID;
+  peerdid: Domain.DID;
   p2p: Libp2p<NODE_SERVICES<T>>;
 }
-
-export class DIDUrl {
-  did: DID;
-  path: string[];
-  parameters: Map<string, string>;
-  fragment: string;
-
-  constructor(
-    did: DID,
-    path: string[] = [],
-    parameters: Map<string, string> = new Map(),
-    fragment = ""
-  ) {
-    this.did = did;
-    this.path = path;
-    this.parameters = parameters;
-    this.fragment = fragment;
-  }
-
-  toString(): string {
-    return `${this.did}${this.fragmentString()}`;
-  }
-
-  pathString(): string {
-    return `/${this.path.join("/")}`;
-  }
-
-  queryString(): string {
-    return `?${Array.from(this.parameters.entries())
-      .map(([key, value]) => `${key}=${value}`)
-      .join("&")}`;
-  }
-
-  fragmentString(): string {
-    return `#${this.fragment}`;
-  }
-
-  static fromString(didString: string) {
-    const regex =
-      /^did:(?<method>[a-z0-9]+(:[a-z0-9]+)*):(?<idstring>[^#?/]*)(?<path>[^#?]*)?(?<query>\?[^#]*)?(?<fragment>#.*)?$/gi;
-    const match = regex.exec(didString);
-    if (!match || !match.groups) {
-      throw new Error("Invalid did string");
-    }
-    const { method, idstring, fragment = "", query = "", path } = match.groups;
-    let attributes = new Map();
-    if (query) {
-      attributes = query
-        .slice(1)
-        .split("&")
-        .map((queryAttribute) => queryAttribute.split("="))
-        .reduce((all, [varName, varValue]) => {
-          all.set(varName, varValue);
-          return all;
-        }, new Map());
-    }
-
-    const did = DID.fromString(`did:${method}:${idstring}`);
-    const paths = path ? path.split("/").filter((p) => p) : [];
-    return new DIDUrl(did, paths, attributes, fragment.slice(1));
-  }
-}
-
-export class DID {
-  public readonly schema: string;
-  public readonly method: string;
-  public readonly methodId: string;
-
-  constructor(schema: string, method: string, methodId: string) {
-    this.schema = schema;
-    this.method = method;
-    this.methodId = methodId;
-  }
-
-  toString() {
-    return `${this.schema}:${this.method}:${this.methodId}`;
-  }
-
-  static fromString(text: string): DID {
-    const schema = DID.getSchemaFromString(text);
-    const method = DID.getMethodFromString(text);
-    const methodId = DID.getMethodIdFromString(text);
-
-    if (schema === undefined) {
-      throw new Error("Invalid DID string, missing scheme");
-    }
-    if (method === undefined) {
-      throw new Error("Invalid DID string, missing method name");
-    }
-    if (methodId === undefined) {
-      throw new Error("Invalid DID string, missing method ID");
-    }
-
-    return new DID(schema, method, methodId);
-  }
-
-  static getSchemaFromString(text: string): string | undefined {
-    const split = text.split(":");
-    return split.at(0);
-  }
-
-  static getMethodFromString(text: string): string | undefined {
-    const split = text.split(":");
-    return split.at(1);
-  }
-
-  static getMethodIdFromString(text: string): string {
-    const split = text.split(":");
-    return split.slice(2).join(":");
-  }
-}
-
-export abstract class AbstractSigningKey {
-  abstract sign(message: Buffer): Buffer;
-}
-
-export abstract class AbstractVerifyingKey {
-  abstract verify(message: Buffer, signature: Buffer): boolean;
-}
-
-export abstract class AbstractExportingKey {
-  abstract export(format: ExportFormats): Uint8Array;
-}
-
-export abstract class Key {
-  abstract type: Curve;
-  abstract raw: Uint8Array;
-  abstract options: Map<KeyProperties | string, string>;
-
-  get curve() {
-    const curveOption = this.getOption(KeyProperties.curve);
-    if (!curveOption) {
-      throw new Error("Invalid curve option not set");
-    }
-    return curveOption;
-  }
-
-  get encoded() {
-    return base64url.baseEncode(this.raw);
-  }
-
-  setOption(name: string, value: string) {
-    return this.options.set(name, value);
-  }
-
-  getOption(name: string) {
-    return this.options.get(name);
-  }
-}
-
-export abstract class PublicKey extends Key implements AbstractExportingKey {
-  canVerify(): this is AbstractVerifyingKey {
-    return "verify" in this;
-  }
-
-  export(format: ExportFormats): Uint8Array {
-    if (format === ExportFormats.JWK) {
-      return Buffer.from(
-        JSON.stringify({
-          crv: this.curve,
-          kty: "OKP",
-          x: this.encoded,
-        })
-      );
-    }
-    throw new Error("Method not implemented.");
-  }
-}
-export abstract class PrivateKey extends Key implements AbstractExportingKey {
-  abstract public: PublicKey;
-
-  canSign(): this is AbstractSigningKey {
-    return "sign" in this;
-  }
-
-  export(format: ExportFormats): Uint8Array {
-    if (format === ExportFormats.JWK) {
-      return Buffer.from(
-        JSON.stringify({
-          crv: this.curve,
-          kty: "OKP",
-          x: this.public.encoded,
-          d: this.encoded,
-        })
-      );
-    }
-    throw new Error("Method not implemented.");
-  }
-}
-
-export enum KeyProperties {
-  curve = "curve",
-}
-
-export enum Curve {
-  X25519 = "X25519",
-  ED25519 = "Ed25519",
-}
-
-export enum ExportFormats {
-  JWK = "JWK",
-}
-
-export type OctetPublicKey = {
-  kty: "OKP";
-  crv: string;
-  x: Uint8Array;
-};
-
-export type KeyPair = {
-  private: PrivateKey;
-  public: PublicKey;
-};

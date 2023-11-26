@@ -1,7 +1,8 @@
-import { ExportFormats, Curve, StorageInterface } from "@djack-sdk/interfaces";
+import { AbstractExportingKey, ExportFormats, StorageInterface } from "@djack-sdk/interfaces";
 import { Service } from "didcomm-node";
 import { Request, Response } from "express";
 import { DEFAULT_PUBLIC_DOMAIN } from "../../Config";
+import { Domain } from '@atala/prism-wallet-sdk';
 
 async function did(
   request: Request,
@@ -10,7 +11,9 @@ async function did(
   domain: string
 ) {
   const { peerId } = request.params;
-  const records = await storage.store.findKeysByDID({ peerId });
+  const privateKeyRecords = await storage.store.findKeysByDID({ peerId });
+  const records = privateKeyRecords.filter((record) => (record as unknown as AbstractExportingKey).canExport()) as unknown as AbstractExportingKey[]
+
   const domainDID = `did:web:${domain}:peers:${peerId}`;
   if (records.length <= 0) {
     return response.status(404).json({ success: false });
@@ -21,18 +24,28 @@ async function did(
   const verificationMethods: any[] = [];
   records.forEach((record, index) => {
     const JWK = record.export(ExportFormats.JWK);
-    if (record.type === Curve.ED25519) {
-      authentication.push(`${domainDID}#key-${index}`);
-      assertionMethod.push(`${domainDID}#key-${index}`);
-    } else if (record.type === Curve.X25519) {
-      keyAgreement.push(`${domainDID}#key-${index}`);
+    if (record.type === Domain.KeyTypes.EC) {
+      if (record.isCurve(Domain.Curve.ED25519)) {
+        authentication.push(`${domainDID}#key-${index}`);
+        assertionMethod.push(`${domainDID}#key-${index}`);
+        verificationMethods.push({
+          id: `${domainDID}#key-${index}`,
+          type: "JsonWebKey2020",
+          controller: domainDID,
+          publicKeyJwk: JSON.parse(Buffer.from(JWK).toString()),
+        });
+      }
+    } else if (record.type === Domain.KeyTypes.Curve25519) {
+      if (record.isCurve(Domain.Curve.X25519)) {
+        keyAgreement.push(`${domainDID}#key-${index}`);
+        verificationMethods.push({
+          id: `${domainDID}#key-${index}`,
+          type: "JsonWebKey2020",
+          controller: domainDID,
+          publicKeyJwk: JSON.parse(Buffer.from(JWK).toString()),
+        });
+      }
     }
-    verificationMethods.push({
-      id: `${domainDID}#key-${index}`,
-      type: "JsonWebKey2020",
-      controller: domainDID,
-      publicKeyJwk: JSON.parse(Buffer.from(JWK).toString()),
-    });
   });
   const services: Service[] = [
     {

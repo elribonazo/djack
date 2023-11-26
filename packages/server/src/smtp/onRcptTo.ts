@@ -1,5 +1,4 @@
 import {
-  ExchangePresentationMessage,
   ExchangeRequestPresentationMessage,
   Network,
 } from "@djack-sdk/network";

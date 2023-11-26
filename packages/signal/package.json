@@ -31,10 +31,12 @@
     "prepublishOnly": "npm run build"
   },
   "dependencies": {
+    "@atala/prism-wallet-sdk": "^3.1.0",
     "@chainsafe/libp2p-gossipsub": "^10.0.0",
     "@chainsafe/libp2p-noise": "^13.0.1",
     "@chainsafe/libp2p-yamux": "^5.0.0",
     "@djack-sdk/did-peer": "^0.1.13",
+    "@djack-sdk/interfaces": "^0.1.13",
     "@djack-sdk/shared": "^0.1.14",
     "@libp2p/crypto": "^2.0.3",
     "@libp2p/interface": "^0.1.2",
