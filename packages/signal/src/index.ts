@@ -175,7 +175,7 @@ const peerDID = new PeerDID(
       id: "didcomm",
       type: "DIDCommMessaging",
       serviceEndpoint: {
-        uri: peerId.toString(),
+        uri: announce,
         accept: ["didcomm/v2"],
       },
     },
