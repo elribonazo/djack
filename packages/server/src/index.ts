@@ -19,17 +19,65 @@ import {
 
 import { multiaddr } from "@multiformats/multiaddr";
 import { peerIdFromString } from "@libp2p/peer-id";
+import { getResolver } from 'web-did-resolver';
+import { DIDDocument, Resolver } from "did-resolver";
 
 (async () => {
   const __dirname = path.dirname(fileURLToPath(import.meta.url));
-  if (!process.env.SSL_CERT_PATH || !process.env.SSL_KEY_PATH || !process.env.RELAY_ADDRESS || !process.env.BARCELONA_PEER || !process.env.HOST_PK || !process.env.HOST_PU || !process.env.BARCELONA_PK || !process.env.BARCELONA_PU) {
-    throw new Error("Undefined required atrribute")
+  if (!process.env.SSL_CERT_PATH ||
+    !process.env.SSL_KEY_PATH) {
+    throw new Error("Please specify valid crt (SSL_CERT_PATH) and key (SSL_KEY_PATH) ssl certificate env variables.")
   }
-  console.log("path", process.env.SSL_CERT_PATH);
+  if (
+    !process.env.HOST_PK ||
+    !process.env.HOST_PU) {
+    throw new Error("Please provide host ed25519keypair using HOST_PK and HOST_PU both as raw hex")
+  }
+
+  if (!process.env.HOST_RELAYS) {
+    throw new Error("Please provide a list of relay didweb in HOST_RELAYS split by comma.")
+  }
+
+  const relays = process.env.HOST_RELAYS.split(",").map((value) => value.trim())
+
+  if (relays.length <= 0) {
+    throw new Error("No HOST_RELAYS have been provided, the user will not be able to communicate outside.")
+  }
 
   const cert = fs.readFileSync(process.env.SSL_CERT_PATH);
   const key = fs.readFileSync(process.env.SSL_KEY_PATH);
   const mailPort = 587;
+
+  const didResolver = new Resolver(await getResolver());
+  const resolvedRelays = await relays.map(async (didWeb) => {
+
+    const resolved = await didResolver.resolve(didWeb);
+    if (resolved && resolved.didDocument) {
+      const requiredService = resolved.didDocument.service?.find((service: any) => service.type === "DIDCommMessaging" && service.serviceEndpoint.accept.includes("didcomm/v2"));
+      if (!requiredService) {
+        throw new Error(`Invalid did:web (${didWeb}), does not accept didcomm/v2 DIDCommMessaging required service.`)
+      }
+      const serviceEndpoint = requiredService.serviceEndpoint;
+      if (Array.isArray(serviceEndpoint)) {
+        throw new Error(`Invalid did:web (${didWeb}), has an invalid serviceEndpoint.`)
+      }
+
+      if (typeof serviceEndpoint === "string") {
+        throw new Error(`Invalid did:web (${didWeb}), has an invalid serviceEndpoint.`)
+      }
+
+      const relayPeerDID = serviceEndpoint.uri;
+      const relayResolvedPeerDID = await PeerDID.resolve(relayPeerDID);
+
+      const requiredpeerIdService = relayResolvedPeerDID.service.find((service) => service.type === "DIDCommMessaging" && service.serviceEndpoint.accept.includes("didcomm/v2"))?.serviceEndpoint.uri as string;
+      if (!requiredpeerIdService) {
+        throw new Error(`Invalid did:web (${didWeb}), does not accept didcomm/v2 DIDCommMessaging required service.`)
+      }
+    }
+
+    throw new Error(`Could not resolve did:web (${didWeb})`)
+  })
+
 
   const ed25519KeyPair = {
     private: new Ed25519PrivateKey(
