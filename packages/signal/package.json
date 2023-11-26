@@ -20,7 +20,7 @@
     "run"
   ],
   "bin": {
-    "djack-server": "./.bin/djack-server"
+    "djack-signal": "./.bin/djack-signal"
   },
   "type": "module",
   "scripts": {
