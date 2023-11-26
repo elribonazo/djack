@@ -98,7 +98,7 @@ const createHttpForPeerId = (
               id: "didcomm",
               type: "DIDCommMessaging",
               serviceEndpoint: {
-                uri: peerDID,
+                uri: peerDID.toString(),
                 accept: ["didcomm/v2"],
               },
             }
