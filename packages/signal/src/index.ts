@@ -64,34 +64,8 @@ const createHttpForPeerId = (
     routes: [
       {
         method: "get",
-        url: "*",
+        url: "/did.json",
         route: async (request, response) => {
-          const isHtml = request.headers['accept'] && request.headers['accept'].includes("text/html");
-          if (isHtml) {
-            return response.send(`<!DOCTYPE html>
-          <html lang="en">
-            <head>
-                <meta charset="UTF-8">
-                <meta name="viewport" content="width=device-width, initial-scale=1.0">
-                <title>DJACK BETA Link</title>
-                <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.15/dist/tailwind.min.css" rel="stylesheet">
-            </head>
-            <body class="bg-gray-900 flex justify-center items-center h-screen ">
-                <div >
-                <a href="/" class="text-indigo-400 hover:no-underline font-bold text-4xl">
-                    @
-                    <span class="bg-clip-text text-transparent bg-gradient-to-r from-green-400 via-pink-500 to-purple-500">
-                        DJACK BETA
-                    </span>
-                </a>
-                <h1 class="text-sm bg-clip-text text-transparent bg-gradient-to-r from-green-400 via-pink-500 to-purple-500">I am a Circuit Relay Server on top of LIBP2P and IPFS</h1>
-                <h2 class="text-sm bg-clip-text text-transparent bg-gradient-to-r from-green-400 via-pink-500 to-purple-500">I provide ways to establish decentralised connections between parties.</h2>
-                <p class="text-xs bg-clip-text text-transparent bg-gradient-to-r from-green-400 via-pink-500 to-purple-500">Connect to this peer by using this DID:<br />${didWeb}</p> 
-                </div>
-            </body>
-          </html>`);
-          }
-
           const records = await inMemory.findKeysByDID({ peerId: peerId.toString() });
 
           if (records.length <= 0) {
@@ -132,6 +106,37 @@ const createHttpForPeerId = (
             keyAgreement: keyAgreement,
             service: services,
           });
+
+        },
+      },
+      {
+        method: "get",
+        url: "*",
+        route: async (request, response) => {
+
+          return response.send(`<!DOCTYPE html>
+          <html lang="en">
+            <head>
+                <meta charset="UTF-8">
+                <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                <title>DJACK BETA Link</title>
+                <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.15/dist/tailwind.min.css" rel="stylesheet">
+            </head>
+            <body class="bg-gray-900 flex justify-center items-center h-screen ">
+                <div >
+                <a href="/" class="text-indigo-400 hover:no-underline font-bold text-4xl">
+                    @
+                    <span class="bg-clip-text text-transparent bg-gradient-to-r from-green-400 via-pink-500 to-purple-500">
+                        DJACK BETA
+                    </span>
+                </a>
+                <h1 class="text-sm bg-clip-text text-transparent bg-gradient-to-r from-green-400 via-pink-500 to-purple-500">I am a Circuit Relay Server on top of LIBP2P and IPFS</h1>
+                <h2 class="text-sm bg-clip-text text-transparent bg-gradient-to-r from-green-400 via-pink-500 to-purple-500">I provide ways to establish decentralised connections between parties.</h2>
+                <p class="text-xs bg-clip-text text-transparent bg-gradient-to-r from-green-400 via-pink-500 to-purple-500">Connect to this peer by using this DID:<br />${didWeb}</p> 
+                </div>
+            </body>
+          </html>`);
+
 
         },
       },
