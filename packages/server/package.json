@@ -4,7 +4,7 @@
   "private": "true",
   "description": "",
   "publishConfig": {
-    "access": "restricted"
+    "access": "public"
   },
   "main": "./build/index.js",
   "types": "./build/index.d.ts",
@@ -21,6 +21,9 @@
     "build/*",
     "src/tls"
   ],
+  "bin": {
+    "djack-server": "./.bin/djack-server"
+  },
   "dependencies": {
     "@aviarytech/did-peer": "^0.0.21",
     "@djack-sdk/did-peer": "^0.0.0",
