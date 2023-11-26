@@ -17,6 +17,9 @@ In order to run this on your server you'll need to have prepared the following e
 | FILTER | Filter only DNS secure websockets peers or allow all | all |
 | CORS | list of domains to allow api calls from, split by comma. NODE_ENV = "development" will enable any domain in cors, but in production its mandatory to enter one or multiple domains, or "*" | none |
 
+
+Pull the docker image and then use docker run + set the environment variables
+
 ```
 docker pull elribonazo/djack-signaling
 ```
