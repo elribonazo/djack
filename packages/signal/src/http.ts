@@ -59,7 +59,7 @@ export default class HTTP {
             if (process.env.NODE_ENV === "development") {
               callback(null, true);
             } else {
-              if (whitelist.indexOf(origin) !== -1) {
+              if (whitelist.indexOf("*") !== -1 || whitelist.indexOf(origin) !== -1) {
                 callback(null, true);
               } else {
                 callback(null, false);
