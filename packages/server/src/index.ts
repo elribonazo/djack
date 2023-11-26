@@ -25,8 +25,10 @@ import { peerIdFromString } from "@libp2p/peer-id";
   if (!process.env.SSL_CERT_PATH || !process.env.SSL_KEY_PATH || !process.env.RELAY_ADDRESS || !process.env.BARCELONA_PEER || !process.env.HOST_PK || !process.env.HOST_PU || !process.env.BARCELONA_PK || !process.env.BARCELONA_PU) {
     throw new Error("Undefined required atrribute")
   }
-  const key = fs.readFileSync(process.env.SSL_CERT_PATH);
-  const cert = fs.readFileSync(process.env.SSL_KEY_PATH);
+  console.log("path", process.env.SSL_CERT_PATH);
+
+  const cert = fs.readFileSync(process.env.SSL_CERT_PATH);
+  const key = fs.readFileSync(process.env.SSL_KEY_PATH);
   const mailPort = 587;
 
   const ed25519KeyPair = {
@@ -197,7 +199,6 @@ import { peerIdFromString } from "@libp2p/peer-id";
     const [address] = server.network.addresses;
     const template = `NEXT_PUBLIC_DIDWEB_HOSTNAME=localhost
   NEXT_PUBLIC_DIDWEB_HOST=localhost
-  NEXT_PUBLIC_GC_URL=https://beta-wallet.gamechanger.finance/api/2/run/XQAAAAIUAQAAAAAAAABDKQqHk62WwfAiBV3_OkZJTid7YCLKBaXXnwwhjjd00jDQXuYMCTNPCUS74JuQsI2YcKDgsQBlKxznoJ-U219dPw3g7FxJmvO-KhkO3xQ8WnPMeqMR9yABWFNaaMP2CzQM6R3IszQU2oHMONXxJBYAxL7SKQNskIY5lIJ3tNondgI0B_GPExq_bOPOYAXmfBKSZiJTuLxsJyA2w8hCKcgD3V2vGA6G8_WPxrzVh1t9Y8Kc7aMEnVtx3BJ3GsO9uD-Hak-RzChmXq89aioTu31qbizqbRb6vuOkQwzCfpMWTS862__njIlTsv1yJfg
   NEXT_PUBLIC_RELAY=${address}
   NEXT_PUBLIC_DOMAIN=http://localhost:3000`;
     fs.writeFileSync(

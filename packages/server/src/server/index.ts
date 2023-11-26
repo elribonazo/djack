@@ -21,7 +21,6 @@ import { gossipsub } from "@chainsafe/libp2p-gossipsub";
 import { pingService } from "libp2p/ping";
 import { fileURLToPath } from "url";
 
-import fs from "fs";
 import { circuitRelayTransport } from "libp2p/circuit-relay";
 
 import { kadDHT } from "@libp2p/kad-dht";

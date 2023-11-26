@@ -59,7 +59,7 @@ async function did(
     verificationMethod: verificationMethods,
     authentication: authentication,
     assertionMethod: assertionMethod,
-    keyAgreement: assertionMethod,
+    keyAgreement: keyAgreement,
     service: services,
   });
 }
