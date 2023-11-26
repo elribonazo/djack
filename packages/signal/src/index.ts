@@ -64,7 +64,7 @@ const createHttpForPeerId = (
     routes: [
       {
         method: "get",
-        url: "/did.json",
+        url: "/.well-known/did.json",
         route: async (request, response) => {
           const records = await inMemory.findKeysByDID({ peerId: peerId.toString() });
 
