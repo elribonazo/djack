@@ -9,10 +9,9 @@ import { Server as WebsocketServer } from "socket.io";
 
 const __dirname = path.dirname(process.cwd());
 
-const whitelist: string[] = []; //white list consumers
-if (process.env.NODE_ENV === "development") {
-  whitelist.push("http://localhost:3000");
-}
+const corsDomains = process.env.CORS_ALLOW || "";
+const whitelist: string[] = corsDomains.split(",");
+
 
 export type AsyncRoute = (req: Request, res: Response) => Promise<void>;
 export type SyncRoute = (req: Request, res: Response) => void;
@@ -38,16 +37,17 @@ export default class HTTP {
   public websocket: WebsocketServer;
 
   constructor(private app: Express, options: HTTPServerOptions) {
+    console.log("HttpServer", options)
     const { cert, key } = options;
     this.server =
       cert && key
         ? https.createServer(
-            {
-              cert,
-              key,
-            },
-            app
-          )
+          {
+            cert,
+            key,
+          },
+          app
+        )
         : http.createServer(app);
     this.websocket = new WebsocketServer(this.server);
 
@@ -56,10 +56,14 @@ export default class HTTP {
       cors({
         origin: (origin, callback) => {
           if (origin) {
-            if (whitelist.indexOf(origin) !== -1) {
+            if (process.env.NODE_ENV === "development") {
               callback(null, true);
             } else {
-              callback(null, false);
+              if (whitelist.indexOf(origin) !== -1) {
+                callback(null, true);
+              } else {
+                callback(null, false);
+              }
             }
           } else {
             callback(null, true);

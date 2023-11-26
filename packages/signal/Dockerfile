@@ -1,5 +1,8 @@
 FROM node:lts
 
+
+# Install OpenSSL
+RUN apt-get update && apt-get install -y openssl
 # Install pnpm globally
 RUN mkdir -p  /usr/src/app
 

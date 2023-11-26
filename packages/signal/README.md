@@ -6,14 +6,22 @@ The signaling server uses websocket transport to allow the email server and the 
 
 In order to run this on your server you'll need to have prepared the following environment variables
 
+| Name          | Description             | Default Value |
+|---------------|-------------------------|---------------|
+| PORT | Default Http/https Port | 8080 |
+| HOST | hostname or ip address | 0.0.0.0 |
+| PUBLIC_DOMAIN | public domain where the signaling server is exposed | localhost |
+| pk | Ed25519PrivateKey in raw bytes in hex | . | 
+| pu | Ed25519PublicKey in raw bytes in hex | . | 
+| announce | The Peer to Peer address to adversite other peers | /dns4/domain/wss/443/peerID |
+| FILTER | Filter only DNS secure websockets peers or allow all | all |
+| CORS | list of domains to allow api calls from, split by comma. NODE_ENV = "development" will enable any domain in cors, but in production its mandatory to enter one or multiple domains, or "*" | none |
+
 ```
-PORT=8080
-pk=[[your pk]]
-pu=[[your pub]]
-announce=/dns4/[[Your public domain]]/tcp/443/wss/p2p/[[your peer id]]
+docker pull elribonazo/djack-signaling
 ```
 
-Pull the docker image elribonazo/djack-signaling or run:
+On in Nodejs run the following command
 
 ```
 npx @djack-sdk/signal
