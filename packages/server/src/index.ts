@@ -3,19 +3,16 @@
 import { fileURLToPath } from "url";
 import fs from "fs";
 import path from "path";
-import { inMemory } from "@djack-sdk/shared";
+import { inMemory, resolveRelayAddressFromDIDWEB } from "@djack-sdk/shared";
 import {
   Ed25519PrivateKey,
   Ed25519PublicKey,
   PeerDID,
 } from "@djack-sdk/did-peer";
-import { multiaddr } from "@multiformats/multiaddr";
 import { getResolver } from 'web-did-resolver';
 import { Resolver } from "did-resolver";
-
 import { Server } from "./server/index.js";
 import { registry } from "./registry";
-import { DID } from "@djack-sdk/interfaces";
 
 (async () => {
   const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -71,33 +68,8 @@ import { DID } from "@djack-sdk/interfaces";
 
   await server.start();
 
-  await relays.map(async (didWeb) => {
-    const resolved = await didResolver.resolve(didWeb);
-    if (resolved && resolved.didDocument) {
-      const requiredService = resolved.didDocument.service?.find((service: any) => service.type === "DIDCommMessaging" && service.serviceEndpoint.accept.includes("didcomm/v2"));
-      if (!requiredService) {
-        throw new Error(`Invalid did:web (${didWeb}), does not accept didcomm/v2 DIDCommMessaging required service.`)
-      }
-      const serviceEndpoint = requiredService.serviceEndpoint;
-      if (Array.isArray(serviceEndpoint)) {
-        throw new Error(`Invalid did:web (${didWeb}), has an invalid serviceEndpoint.`)
-      }
-      if (typeof serviceEndpoint === "string") {
-        throw new Error(`Invalid did:web (${didWeb}), has an invalid serviceEndpoint.`)
-      }
-      const relayPeerDID = serviceEndpoint.uri;
-      const relayResolvedPeerDID = await PeerDID.resolve(DID.fromString(relayPeerDID));
-      const relayAddress = relayResolvedPeerDID.service.find((service) => service.type === "DIDCommMessaging" && service.serviceEndpoint.accept.includes("didcomm/v2"))?.serviceEndpoint.uri as string;
-      if (!relayAddress) {
-        throw new Error(`Invalid did:web (${didWeb}), does not accept didcomm/v2 DIDCommMessaging required service.`)
-      }
-      await server.network.dial(
-        multiaddr(
-          relayAddress
-        )
-      );
-    }
-    throw new Error(`Could not resolve did:web (${didWeb})`)
+  await relays.map((didWeb) => {
+    resolveRelayAddressFromDIDWEB(didWeb, didResolver.resolve, PeerDID.resolve)
   })
 
   server.network.p2p.addEventListener("self:peer:update", (evt) => {
