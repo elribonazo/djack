@@ -93,7 +93,13 @@ const createHttpForPeerId = (
             });
           });
           //Better build and expose the services
-          const services: Service[] = [];
+          const services: Service[] = [
+            {
+              id: "djack-sdk",
+              serviceEndpoint: announce,
+              type: "DJACK-DIDCOMM"
+            }
+          ];
           return response.json({
             "@context": [
               "https://www.w3.org/ns/did/v1",
