@@ -1,6 +1,6 @@
 {
   "name": "@djack-sdk/server",
-  "version": "0.1.5",
+  "version": "0.1.6",
   "description": "",
   "publishConfig": {
     "access": "public"
@@ -26,11 +26,11 @@
   "dependencies": {
     "@atala/prism-wallet-sdk": "^3.1.0",
     "@aviarytech/did-peer": "^0.0.21",
-    "@djack-sdk/did-peer": "^0.1.14",
+    "@djack-sdk/did-peer": "^0.1.15",
     "@djack-sdk/interfaces": "^0.1.14",
-    "@djack-sdk/network": "^0.1.14",
+    "@djack-sdk/network": "^0.1.15",
     "@djack-sdk/shared": "^0.1.15",
-    "@djack-sdk/signal": "^0.1.25",
+    "@djack-sdk/signal": "^0.1.26",
     "@emurgo/cardano-serialization-lib-nodejs": "^11.4.0",
     "@hyperledger/anoncreds-nodejs": "^0.1.0",
     "@libp2p/crypto": "^2.0.3",
