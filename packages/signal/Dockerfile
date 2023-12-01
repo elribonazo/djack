@@ -12,7 +12,7 @@ ARG NODE_ENV=development
 COPY ./packages/signal/package.json /usr/src/app/package.json
 
 # Use pnpm for package installation
-RUN NODE_ENV=development npm install --only=development
+RUN NODE_ENV=development npm install 
 
 COPY ./packages/signal /usr/src/app
 ENV NODE_ENV=production
