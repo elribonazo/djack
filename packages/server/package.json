@@ -1,6 +1,6 @@
 {
   "name": "@djack-sdk/server",
-  "version": "0.1.7",
+  "version": "0.1.8",
   "description": "",
   "publishConfig": {
     "access": "public"
@@ -28,9 +28,9 @@
     "@aviarytech/did-peer": "^0.0.21",
     "@djack-sdk/did-peer": "^0.1.16",
     "@djack-sdk/interfaces": "^0.1.15",
-    "@djack-sdk/network": "^0.1.16",
+    "@djack-sdk/network": "^0.1.17",
     "@djack-sdk/shared": "^0.1.16",
-    "@djack-sdk/signal": "^0.1.27",
+    "@djack-sdk/signal": "^0.1.28",
     "@emurgo/cardano-serialization-lib-nodejs": "^11.4.0",
     "@hyperledger/anoncreds-nodejs": "^0.1.0",
     "@libp2p/crypto": "^2.0.3",
