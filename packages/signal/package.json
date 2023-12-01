@@ -1,6 +1,6 @@
 {
   "name": "@djack-sdk/signal",
-  "version": "0.1.26",
+  "version": "0.1.27",
   "description": "",
   "exports": {
     ".": {
@@ -35,9 +35,9 @@
     "@chainsafe/libp2p-gossipsub": "^10.0.0",
     "@chainsafe/libp2p-noise": "^13.0.1",
     "@chainsafe/libp2p-yamux": "^5.0.0",
-    "@djack-sdk/did-peer": "^0.1.15",
-    "@djack-sdk/interfaces": "^0.1.14",
-    "@djack-sdk/shared": "^0.1.15",
+    "@djack-sdk/did-peer": "^0.1.16",
+    "@djack-sdk/interfaces": "^0.1.15",
+    "@djack-sdk/shared": "^0.1.16",
     "@libp2p/crypto": "^2.0.3",
     "@libp2p/interface": "^0.1.2",
     "@libp2p/kad-dht": "^10.0.4",
