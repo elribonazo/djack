@@ -1,7 +1,7 @@
 version: '3'
 services:
   server:
-    image: elribonazo/djack-server
+    image: elribonazo/djack-server:latest
     platform: linux/amd64
     ports:
       - "3000:3000"
@@ -23,7 +23,7 @@ services:
       - ./.tls/server.key:/usr/src/app/build/tls/server.key
 
   barcelona:
-    image: elribonazo/djack-signaling
+    image: elribonazo/djack-signaling:latest
     platform: linux/arm64
     ports:
       - "8081:8080"

@@ -15,7 +15,7 @@ ARG NODE_ENV=development
 COPY ./packages/server/package.json /usr/src/app/package.json
 
 # Use pnpm for package installation
-RUN NODE_ENV=development npm install 
+RUN npm install 
 
 COPY ./packages/frontend/out /frontend/out
 COPY ./packages/server /usr/src/app
