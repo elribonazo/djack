@@ -1,14 +1,19 @@
 import type { PeerId } from "@libp2p/interface-peer-id";
 import type { StreamHandler } from "@libp2p/interface/stream-handler";
 import type { Libp2p } from "libp2p";
-import type { Service } from "didcomm";
 import type { PubSub } from "@libp2p/interface/pubsub";
 import type { GossipsubEvents } from "@chainsafe/libp2p-gossipsub";
 import { type Transport } from "@libp2p/interface/transport";
 import { RecursivePartial } from "@libp2p/interface";
 import { Components } from "libp2p/components";
 import { PeerDiscovery } from "@libp2p/interface/peer-discovery";
-import { Domain, Ed25519PrivateKey, Ed25519PublicKey, X25519PrivateKey, X25519PublicKey } from '@atala/prism-wallet-sdk';
+import {
+  Domain,
+  Ed25519PrivateKey,
+  Ed25519PublicKey,
+  X25519PrivateKey,
+  X25519PublicKey
+} from '@atala/prism-wallet-sdk';
 
 export enum ExportFormats {
   JWK = "JWK",
