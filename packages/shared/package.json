@@ -1,6 +1,6 @@
 {
   "name": "@djack-sdk/shared",
-  "version": "0.1.14",
+  "version": "0.1.15",
   "description": "",
   "main": "./build/index.js",
   "types": "./build/index.d.ts",
@@ -20,7 +20,7 @@
   ],
   "dependencies": {
     "@atala/prism-wallet-sdk": "^3.1.0",
-    "@djack-sdk/interfaces": "^0.1.13",
+    "@djack-sdk/interfaces": "^0.1.14",
     "@libp2p/interface-peer-id": "^2.0.2",
     "did-resolver": "^4.1.0",
     "web-did-resolver": "^2.0.27"

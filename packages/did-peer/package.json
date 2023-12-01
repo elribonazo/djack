@@ -1,6 +1,6 @@
 {
   "name": "@djack-sdk/did-peer",
-  "version": "0.1.13",
+  "version": "0.1.14",
   "publishConfig": {
     "access": "public"
   },
@@ -20,8 +20,8 @@
   },
   "dependencies": {
     "@atala/prism-wallet-sdk": "^3.1.0",
-    "@djack-sdk/interfaces": "^0.1.13",
-    "@djack-sdk/shared": "^0.1.14",
+    "@djack-sdk/interfaces": "^0.1.14",
+    "@djack-sdk/shared": "^0.1.15",
     "@libp2p/crypto": "^2.0.3",
     "@libp2p/peer-id-factory": "^3.0.2",
     "@stablelib/ed25519": "^1.0.3",
