@@ -1,6 +1,6 @@
 #!bin/bash
 architecture=$(dirname "$0")
-npm run build
+
 
 docker buildx create --use
 
