@@ -15,7 +15,7 @@ import { peerIdFromKeys } from "@libp2p/peer-id";
 import { inMemory } from "@djack-sdk/shared";
 import { createEd25519KeyPair, createX25519FromEd25519KeyPair } from "@djack-sdk/did-peer";
 import { Service } from "didcomm-node";
-import { Domain } from '@atala/prism-wallet-sdk';
+import { Domain, Castor, Apollo } from '@atala/prism-wallet-sdk';
 import { AbstractExportingKey, ExportFormats, ExportableEd25519PrivateKey, ExportableEd25519PublicKey } from "@djack-sdk/interfaces";
 
 // TODO find out which of this services is causing the CPU to go up
@@ -41,8 +41,8 @@ function getStartupKeys() {
   }
   const ed25519KeyPair = createEd25519KeyPair();
   return {
-    pk: Buffer.from(ed25519KeyPair.private.raw).toString('hex'),
-    pu: Buffer.from(ed25519KeyPair.public.raw).toString('hex')
+    pk: Buffer.from(ed25519KeyPair.privateKey.raw).toString('hex'),
+    pu: Buffer.from(ed25519KeyPair.publicKey.raw).toString('hex')
   }
 }
 
@@ -55,7 +55,7 @@ if (!pk || !pu || !announce) {
 
 const createHttpForPeerId = (
   peerId: PeerId,
-  peerDID: PeerDID,
+  peerDID: Domain.DID,
   didWeb: string,
   listen: string,
   announce: string,
@@ -165,38 +165,43 @@ const createHttpForPeerId = (
     ],
   });
 
-const ed25519KeyPair = {
-  private: new ExportableEd25519PrivateKey(Buffer.from(pk, "hex")),
-  public: new ExportableEd25519PublicKey(Buffer.from(pu, "hex")),
+const ed25519KeyPair: Domain.KeyPair = {
+  curve: Domain.Curve.ED25519,
+  privateKey: new ExportableEd25519PrivateKey(Buffer.from(pk, "hex")),
+  publicKey: new ExportableEd25519PublicKey(Buffer.from(pu, "hex")),
 };
 
 const x25519KeyPair = createX25519FromEd25519KeyPair(ed25519KeyPair);
 
 
 const peerId = await peerIdFromKeys(
-  new supportedKeys.ed25519.Ed25519PublicKey(ed25519KeyPair.public.raw).bytes,
+  new supportedKeys.ed25519.Ed25519PublicKey(ed25519KeyPair.publicKey.raw).bytes,
   new supportedKeys.ed25519.Ed25519PrivateKey(
-    ed25519KeyPair.private.raw,
-    ed25519KeyPair.public.raw
+    ed25519KeyPair.privateKey.raw,
+    ed25519KeyPair.publicKey.raw
   ).bytes
 );
 
-const peerDID = new PeerDID(
-  [ed25519KeyPair, x25519KeyPair].map((keyPair) => keyPair.public),
-  [
-    {
-      id: "didcomm",
-      type: "DIDCommMessaging",
-      serviceEndpoint: {
-        uri: announce,
-        accept: ["didcomm/v2"],
-      },
-    },
-  ]
+const apollo = new Apollo();
+const castor = new Castor(apollo);
+
+const service = new Domain.Service(
+  "didcomm",
+  ["DIDCommMessaging"],
+  {
+    uri: announce,
+    accept: ["didcomm/v2"],
+    routingKeys: []
+  }
 );
 
-await inMemory.addDIDKey(peerDID, peerId, ed25519KeyPair.private)
-await inMemory.addDIDKey(peerDID, peerId, x25519KeyPair.private)
+const peerDID = await castor.createPeerDID(
+  [ed25519KeyPair, x25519KeyPair].map((keyPair) => keyPair.publicKey),
+  [service]
+)
+
+await inMemory.addDIDKey(peerDID, peerId, ed25519KeyPair.privateKey);
+await inMemory.addDIDKey(peerDID, peerId, x25519KeyPair.privateKey);
 
 console.log("DJACK-signaling");
 

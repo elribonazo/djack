@@ -4,14 +4,11 @@ import { fileURLToPath } from "url";
 import fs from "fs";
 import path from "path";
 import { inMemory, resolveRelayAddressFromDIDWEB } from "@djack-sdk/shared";
-import {
-  PeerDID,
-} from "@djack-sdk/did-peer";
 import { getResolver } from 'web-did-resolver';
 import { Resolver } from "did-resolver";
 import { Server } from "./server/index.js";
 import { registry } from "./registry";
-import { Domain } from '@atala/prism-wallet-sdk';
+import { Domain, Castor, Apollo } from '@atala/prism-wallet-sdk';
 import { ExportableEd25519PrivateKey, ExportableEd25519PublicKey } from "@djack-sdk/interfaces";
 
 (async () => {
@@ -69,8 +66,11 @@ import { ExportableEd25519PrivateKey, ExportableEd25519PublicKey } from "@djack-
 
   await server.start();
 
+  const apollo = new Apollo();
+  const castor = new Castor(apollo);
+
   await relays.map((didWeb) => {
-    resolveRelayAddressFromDIDWEB(didWeb, didResolver.resolve, PeerDID.resolve)
+    resolveRelayAddressFromDIDWEB(didWeb, didResolver.resolve, castor.resolveDID)
   })
 
   server.network.p2p.addEventListener("self:peer:update", (evt) => {

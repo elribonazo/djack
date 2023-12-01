@@ -2,10 +2,8 @@ import type { DIDDoc } from "didcomm-node";
 import { DIDResolutionOptions, DIDResolutionResult } from "did-resolver";
 import { Domain } from '@atala/prism-wallet-sdk';
 
-
 type ResolverFN = (didUrl: string, options?: DIDResolutionOptions) => Promise<DIDResolutionResult>;
-type PeerDIDResolverFN = (did: Domain.DID) => DIDDoc;
-
+type PeerDIDResolverFN = (did: string) => Promise<Domain.DIDDocument>;
 
 export function didUrlFromString(didString: string) {
     const regex =
@@ -48,8 +46,8 @@ export async function resolveRelayAddressFromDIDWEB(didWeb: string, didWebResolv
             throw new Error(`Invalid did:web (${didWeb}), has an invalid serviceEndpoint.`)
         }
         const relayPeerDID = serviceEndpoint.uri;
-        const relayResolvedPeerDID = await peerDidResolver(Domain.DID.fromString(relayPeerDID));
-        const relayAddress = relayResolvedPeerDID.service.find((service) => service.type === "DIDCommMessaging" && service.serviceEndpoint.accept.includes("didcomm/v2"))?.serviceEndpoint.uri as string;
+        const relayResolvedPeerDID = await peerDidResolver(relayPeerDID);
+        const relayAddress = relayResolvedPeerDID.services.find((service) => service.type.includes("DIDCommMessaging") && service.serviceEndpoint.accept.includes("didcomm/v2"))?.serviceEndpoint.uri as string;
         if (!relayAddress) {
             throw new Error(`Invalid did:web (${didWeb}), does not accept didcomm/v2 DIDCommMessaging required service.`)
         }

@@ -7,10 +7,15 @@ import { pipe } from "it-pipe";
 import { yamux } from "@chainsafe/libp2p-yamux";
 import { mplex } from "@libp2p/mplex";
 import { noise } from "@chainsafe/libp2p-noise";
-import { Message, Secret } from "didcomm-node";
 import type { StreamHandler } from "@libp2p/interface/stream-handler";
 import { Multiaddr } from "@multiformats/multiaddr";
 import { Buffer } from "buffer/index.js";
+import type {
+  DIDResolver, Secret, DIDDoc, Service
+} from "didcomm-node";
+import {
+  Message
+} from "didcomm-node";
 import {
   ExportFormats,
   CreateNodeOptions,
@@ -25,13 +30,10 @@ import {
   ExportableEd25519PublicKey,
   AbstractExportingKey,
 } from "@djack-sdk/interfaces";
-import { Domain } from '@atala/prism-wallet-sdk';
+import { Domain, Apollo, Castor } from '@atala/prism-wallet-sdk';
 
 import type { DIDFactory } from "@djack-sdk/did-peer";
 import {
-  PeerDID,
-  Ed25519PrivateKey,
-  Ed25519PublicKey,
   createX25519FromEd25519KeyPair,
   createX25519PublicKeyFromEd25519PublicKey,
 } from "@djack-sdk/did-peer";
@@ -42,8 +44,11 @@ import { didUrlFromString } from "@djack-sdk/shared";
 export * from "./Task";
 export * from "./AnoncredsLoader";
 export * from "./Protocols";
-//content
 
+const apollo = new Apollo();
+const castor = new Castor(apollo)
+export const DIDCommMessagingKey = "DIDCommMessaging";
+export const DIDCommMessagingEncodedKey = "dm";
 export type ProtocolHandler<
   ProtocolName = string,
   ProtocolHandle = StreamHandler
@@ -53,7 +58,7 @@ export class ProtocolHandlers {
   constructor(public protocols: ProtocolHandler[] = []) { }
 }
 
-export function getPeerIDDID(peer: PeerId): PeerDID {
+export async function getPeerIDDID(peer: PeerId): Promise<Domain.DID> {
   const publicKey = peer.publicKey?.slice(4);
 
   if (!publicKey) {
@@ -62,10 +67,12 @@ export function getPeerIDDID(peer: PeerId): PeerDID {
   const unmarshalEd25519PublicKey =
     supportedKeys.ed25519.unmarshalEd25519PublicKey(publicKey);
 
-  const ed25519Pub = new Ed25519PublicKey(unmarshalEd25519PublicKey.marshal());
+  const ed25519Pub = new ExportableEd25519PublicKey(unmarshalEd25519PublicKey.marshal());
   const x25519Pub = createX25519PublicKeyFromEd25519PublicKey(ed25519Pub);
   const services = Network.getServicesForPeerDID(peer);
-  return new PeerDID([ed25519Pub, x25519Pub], services);
+
+
+  return castor.createPeerDID([ed25519Pub, x25519Pub], services)
 }
 
 export class Network<T extends Record<string, unknown> = DEFAULT_SERVICES> {
@@ -193,10 +200,11 @@ export class Network<T extends Record<string, unknown> = DEFAULT_SERVICES> {
       `${options.didWebHostname}:peers:${peerId.toString()}`
     );
 
-    const peerDID = new PeerDID(
+    const peerDID = await castor.createPeerDID(
       keyPairs.map((keyPair) => keyPair.publicKey),
       this.getServicesForPeerDID(peerId)
-    );
+    )
+
 
     for (const priv of privateKeys) {
       await storage.store.addDIDKey(did, peerId, priv);
@@ -221,53 +229,44 @@ export class Network<T extends Record<string, unknown> = DEFAULT_SERVICES> {
       peerDiscovery: peerDiscovery,
     });
 
-    if (publicKeys && publicKeys.length) {
-      console.log(
-        "Creating ",
-        new PeerDID(publicKeys, [
-          {
-            id: "didcomm",
-            type: "DIDCommMessaging",
-            serviceEndpoint: {
-              uri: new PeerDID(publicKeys).toString(),
-              accept: ["didcomm/v2"],
-            },
-          },
-        ]).toString()
-      );
-    }
-
     const cardanoDID =
       publicKeys && publicKeys.length
         ? {
-          cardanoDID: new PeerDID(publicKeys, [
-            {
-              id: "didcomm",
-              type: "DIDCommMessaging",
-              serviceEndpoint: {
-                uri: new PeerDID(publicKeys).toString(),
-                accept: ["didcomm/v2"],
-              },
-            },
-          ]),
-        }
-        : {
-          cardanoDID: new PeerDID(
-            [ed25519KeyPair.publicKey, x25519KeyPair.publicKey],
+          cardanoDID: await castor.createPeerDID(
+            publicKeys,
             [
-              {
-                id: "didcomm",
-                type: "DIDCommMessaging",
-                serviceEndpoint: {
-                  uri: new PeerDID([
-                    ed25519KeyPair.publicKey,
-                    x25519KeyPair.publicKey,
-                  ]).toString(),
+              new Domain.Service(
+                "didcomm",
+                ["DIDCommMessaging"],
+                {
+                  uri: (await castor.createPeerDID(publicKeys, [])).toString(),
                   accept: ["didcomm/v2"],
-                },
-              },
+                  routingKeys: []
+                }
+              )
             ]
           ),
+        }
+        : {
+          cardanoDID: await castor.createPeerDID(
+            [ed25519KeyPair.publicKey, x25519KeyPair.publicKey],
+            [
+              new Domain.Service(
+                "didcomm",
+                [
+                  "DIDCommMessaging"
+                ],
+                {
+                  uri: (await castor.createPeerDID([
+                    ed25519KeyPair.publicKey,
+                    x25519KeyPair.publicKey,
+                  ], [])).toString(),
+                  accept: ["didcomm/v2"],
+                  routingKeys: []
+                }
+              )
+            ]
+          )
         };
 
     console.log("Cardnao did ", cardanoDID);
@@ -286,16 +285,17 @@ export class Network<T extends Record<string, unknown> = DEFAULT_SERVICES> {
     });
   }
 
-  static getServicesForPeerDID(peerId: PeerId) {
+  static getServicesForPeerDID(peerId: PeerId): Domain.Service[] {
     return [
-      {
-        id: "didcomm",
-        type: "DIDCommMessaging",
-        serviceEndpoint: {
+      new Domain.Service(
+        "didcomm",
+        ["DIDCommMessaging"],
+        {
           uri: peerId.toString(),
           accept: ["didcomm/v2"],
-        },
-      },
+          routingKeys: []
+        }
+      )
     ];
   }
 
@@ -315,9 +315,77 @@ export class Network<T extends Record<string, unknown> = DEFAULT_SERVICES> {
     return this.p2p.peerId;
   }
 
-  get didResolver() {
+  get didResolver(): DIDResolver {
     return {
-      resolve: async (did: string) => PeerDID.resolve(Domain.DID.fromString(did)),
+      resolve: async (did: string) => {
+        const doc = await castor.resolveDID(did);
+
+        const authentications: string[] = [];
+        const keyAgreements: string[] = [];
+        const services: Service[] = [];
+        const verificationMethods: Domain.VerificationMethod[] = [];
+
+        doc.coreProperties.forEach((coreProperty) => {
+          if ("verificationMethods" in coreProperty) {
+            coreProperty.verificationMethods.forEach((method) => {
+              const curve = Domain.VerificationMethod.getCurveByType(
+                method.publicKeyJwk?.crv || ""
+              );
+
+              switch (curve) {
+                case Domain.Curve.ED25519:
+                  authentications.push(method.id);
+                  break;
+
+                case Domain.Curve.X25519:
+                  keyAgreements.push(method.id);
+                  break;
+              }
+              const publicKeyBase64 = method.publicKeyJwk?.x as any;
+              const publicKeyKid = (method.publicKeyJwk as any).kid;
+              if (!method.publicKeyJwk) {
+                throw new Error("Only JWK allowed")
+              }
+              verificationMethods.push({
+                controller: method.controller,
+                id: method.id,
+                type: "JsonWebKey2020",
+                publicKeyJwk: {
+                  crv: method.publicKeyJwk?.crv,
+                  kid: publicKeyKid,
+                  kty: "OKP",
+                  x: publicKeyBase64,
+                },
+              });
+            });
+          }
+
+          if (
+            coreProperty instanceof Domain.Service &&
+            coreProperty.type.includes(DIDCommMessagingKey)
+          ) {
+            services.push({
+              id: coreProperty.id,
+              type: DIDCommMessagingKey,
+              serviceEndpoint: {
+                uri: coreProperty.serviceEndpoint.uri,
+                accept: coreProperty.serviceEndpoint.accept,
+                routing_keys: coreProperty.serviceEndpoint.routingKeys,
+              },
+            });
+          }
+        });
+
+        const dcdoc: DIDDoc = {
+          id: doc.id.toString(),
+          authentication: authentications,
+          keyAgreement: keyAgreements,
+          service: services,
+          verificationMethod: verificationMethods,
+        };
+
+        return dcdoc;
+      },
     };
   }
 
@@ -337,39 +405,68 @@ export class Network<T extends Record<string, unknown> = DEFAULT_SERVICES> {
       get_secret: async (secretId: string) => {
         const peerDIDs = await this.storage.store.findAllDIDs();
         const secretDID = didUrlFromString(secretId);
-        const found = peerDIDs.filter((peerDIDSecret: any) => {
+        const found = peerDIDs.find((peerDIDSecret: any) => {
           return secretDID.did.toString() === peerDIDSecret.toString();
         });
         if (found) {
-          for (const key of found) {
-            const didDocument = await PeerDID.resolve(key);
-            const verificationMethod = didDocument.verificationMethod.find(
-              (v: any) => v.id === secretId
-            );
-            if (verificationMethod) {
-              const privateKeyRecords = await this.storage.store.findKeysByDID({
-                did: found.map((did) => did.toString()),
-              });
-              const keys = privateKeyRecords.filter((record) => (record as unknown as AbstractExportingKey).canExport()) as unknown as AbstractExportingKey[]
-              const foundPriv = keys.find(
-                ({ type }: any) => type === Domain.Curve.X25519
-              );
-              if (foundPriv) {
-                const secret: Secret = {
-                  id: secretId,
-                  type: "JsonWebKey2020",
-                  privateKeyJwk: JSON.parse(
-                    Buffer.from(foundPriv.export(ExportFormats.JWK)).toString()
-                  ),
-                };
-                return secret;
+          const did = await castor.resolveDID(found.did.toString());
+          const [publicKeyJWK] = did.coreProperties.reduce((all, property) => {
+            if (property instanceof Domain.VerificationMethods) {
+              const matchingValue: Domain.VerificationMethod | undefined =
+                property.values.find(
+                  (verificationMethod) => verificationMethod.id === secretId
+                );
+
+              if (matchingValue && matchingValue.publicKeyJwk) {
+                return [...all, matchingValue.publicKeyJwk];
               }
             }
+            return all;
+          }, [] as Domain.PublicKeyJWK[]);
+          if (publicKeyJWK) {
+            const secret = this.mapToSecret(found, publicKeyJWK);
+            return secret;
           }
         }
+
         return null;
       },
     };
+  }
+
+  private mapToSecret(
+    peerDid: Domain.PeerDID,
+    publicKeyJWK: Domain.PublicKeyJWK
+  ): Secret {
+    const privateKeyBuffer = peerDid.privateKeys.find(
+      (key) => key.keyCurve.curve === Domain.Curve.X25519
+    );
+    if (!privateKeyBuffer) {
+      throw new Error(`Invalid PrivateKey Curve ${Domain.Curve.X25519}`);
+    }
+    const privateKey = apollo.createPrivateKey({
+      type: Domain.KeyTypes.Curve25519,
+      curve: Domain.Curve.X25519,
+      raw: privateKeyBuffer.value,
+    });
+    const ecnumbasis = castor.getEcnumbasis(
+      peerDid.did,
+      privateKey.publicKey()
+    );
+    const id = `${peerDid.did.toString()}#${ecnumbasis}`;
+
+    const secret: Secret = {
+      id,
+      type: "JsonWebKey2020",
+      privateKeyJwk: {
+        crv: Domain.Curve.X25519,
+        kty: "OKP",
+        d: Buffer.from(privateKey.getEncoded()).toString(),
+        x: publicKeyJWK.x,
+      },
+    };
+
+    return secret;
   }
 
   onPeerDiscovery?: (event: {

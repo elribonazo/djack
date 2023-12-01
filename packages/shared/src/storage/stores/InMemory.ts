@@ -34,8 +34,14 @@ class InMemory implements AbstractStore {
       .map((record) => record.key);
     return keys;
   }
-  async findAllDIDs(): Promise<Domain.DID[]> {
-    const keys = data.keys.map((record) => record.did);
+  async findAllDIDs(): Promise<Domain.PeerDID[]> {
+    const keys = data.keys.map((record) => new Domain.PeerDID(record.did, [{
+      keyCurve: {
+        curve: record.key.curve as Domain.Curve
+      },
+      value: record.key.raw
+
+    }]));
     return keys;
   }
   async addDIDKey(did: Domain.DID, peerId: PeerId, key: Domain.PrivateKey): Promise<void> {

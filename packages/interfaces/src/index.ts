@@ -99,7 +99,7 @@ export abstract class AbstractStore {
     peerId?: string | string[];
   }): Promise<Domain.PrivateKey[]>;
   abstract addDIDKey(did: Domain.DID, peerId: PeerId, key: Domain.PrivateKey): Promise<void>;
-  abstract findAllDIDs(): Promise<Domain.DID[]>;
+  abstract findAllDIDs(): Promise<Domain.PeerDID[]>;
 }
 export type StorageInterface = { store: AbstractStore };
 export type RegistryInterface = {
@@ -145,9 +145,10 @@ export type Handlers<Protocol = string, Handler = StreamHandler> = [
 ];
 
 export type DIDFactoryAbstract = {
+  castor: Domain.Castor;
   storage: StorageInterface;
-  createPeerDID(services: Service[]): Promise<Domain.DID>;
-  createPeerDIDWithKeys(keyPairs: Domain.KeyPair[], services: Service[]): Promise<Domain.DID>;
+  createPeerDID(services: Domain.Service[]): Promise<Domain.DID>;
+  createPeerDIDWithKeys(keyPairs: Domain.KeyPair[], services: Domain.Service[]): Promise<Domain.DID>;
 };
 
 export type DEFAULT_SERVICES = {

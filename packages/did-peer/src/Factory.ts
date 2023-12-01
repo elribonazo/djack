@@ -1,4 +1,3 @@
-import type { Service } from "didcomm-node";
 import { peerIdFromKeys } from "@libp2p/peer-id";
 
 import { supportedKeys } from "@libp2p/crypto/keys";
@@ -8,14 +7,17 @@ import {
   StorageInterface,
 } from "@djack-sdk/interfaces";
 
-import { Domain, Ed25519PrivateKey, Ed25519PublicKey } from '@atala/prism-wallet-sdk';
+import { Domain, Ed25519PrivateKey, Ed25519PublicKey, Apollo, Castor } from '@atala/prism-wallet-sdk';
 
 import { createX25519FromEd25519KeyPair } from "./x25519/create";
 
 export class DIDFactory implements DIDFactoryAbstract {
-  constructor(public storage: StorageInterface) { }
+  constructor(
+    public storage: StorageInterface,
+    public castor: Domain.Castor = new Castor(new Apollo())
+  ) { }
 
-  async createPeerDID(services: Service[] = []) {
+  async createPeerDID(services: Domain.Service[] = []) {
     const edPrivate = await supportedKeys.ed25519.generateKeyPair();
 
     const edKeyPair: Domain.KeyPair = {
@@ -26,10 +28,10 @@ export class DIDFactory implements DIDFactoryAbstract {
 
     const xKeyPair: Domain.KeyPair = createX25519FromEd25519KeyPair(edKeyPair);
     const keyPairs = [edKeyPair, xKeyPair];
-
     const publicKeys = keyPairs.map((keyPair) => keyPair.publicKey);
     const privateKeys = keyPairs.map((keyPair) => keyPair.privateKey);
-    const did = PeerDIDCreate.createPeerDID(publicKeys, services);
+
+    const did = await this.castor.createPeerDID(publicKeys, services);
 
     const peerId = await peerIdFromKeys(
       new supportedKeys.ed25519.Ed25519PublicKey(edKeyPair.publicKey.raw).bytes,
@@ -46,10 +48,10 @@ export class DIDFactory implements DIDFactoryAbstract {
     return did;
   }
 
-  async createPeerDIDWithKeys(keyPairs: Domain.KeyPair[], services: Service[] = []) {
+  async createPeerDIDWithKeys(keyPairs: Domain.KeyPair[], services: Domain.Service[] = []) {
     const publicKeys = keyPairs.map((keyPair) => keyPair.publicKey);
     const privateKeys = keyPairs.map((keyPair) => keyPair.privateKey);
-    const did = PeerDIDCreate.createPeerDID(publicKeys, services);
+    const did = await this.castor.createPeerDID(publicKeys, services);
 
     const peerId = await peerIdFromKeys(
       new supportedKeys.ed25519.Ed25519PublicKey(publicKeys[0].raw).bytes,

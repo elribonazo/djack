@@ -3,7 +3,8 @@ import {
   convertSecretKeyToX25519,
 } from "@stablelib/ed25519";
 
-import { Domain, X25519PrivateKey, X25519PublicKey, Ed25519PublicKey } from '@atala/prism-wallet-sdk';
+import { Domain, Ed25519PublicKey } from '@atala/prism-wallet-sdk';
+import { ExportableX25519PrivateKey, ExportableX25519PublicKey } from "@djack-sdk/interfaces";
 
 export function createX25519FromEd25519KeyPair(keyPair: Domain.KeyPair): Domain.KeyPair {
   if (
@@ -18,13 +19,13 @@ export function createX25519FromEd25519KeyPair(keyPair: Domain.KeyPair): Domain.
 
   return {
     curve: Domain.Curve.X25519,
-    publicKey: new X25519PublicKey(x25519Public),
-    privateKey: new X25519PrivateKey(x25519Private),
+    publicKey: new ExportableX25519PublicKey(x25519Public),
+    privateKey: new ExportableX25519PrivateKey(x25519Private),
   };
 }
 
 export function createX25519PublicKeyFromEd25519PublicKey(
   publicKey: Ed25519PublicKey
 ) {
-  return new X25519PublicKey(convertPublicKeyToX25519(publicKey.raw));
+  return new ExportableX25519PublicKey(convertPublicKeyToX25519(publicKey.raw));
 }

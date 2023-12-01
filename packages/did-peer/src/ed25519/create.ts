@@ -1,4 +1,5 @@
 import { Domain, Apollo } from '@atala/prism-wallet-sdk';
+import { ExportableEd25519PrivateKey, ExportableEd25519PublicKey } from '@djack-sdk/interfaces';
 
 const apollo = new Apollo();
 
@@ -9,7 +10,7 @@ export function createEd25519KeyPair(): Domain.KeyPair {
   });
   return {
     curve: Domain.Curve.ED25519,
-    privateKey: privateKey,
-    publicKey: privateKey.publicKey(),
+    privateKey: new ExportableEd25519PrivateKey(privateKey.raw),
+    publicKey: new ExportableEd25519PublicKey(privateKey.publicKey().raw),
   };
 }
