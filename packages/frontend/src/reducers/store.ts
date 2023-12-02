@@ -2,9 +2,8 @@
 import { Store } from "redux";
 import thunk from "redux-thunk";
 import { base64url } from "multiformats/bases/base64";
-import { Ed25519PublicKey, X25519PublicKey } from "@djack-sdk/did-peer";
-import { createWrapper } from "next-redux-wrapper";
-import { configureStore } from "@reduxjs/toolkit";
+
+import { configureStore } from '@reduxjs/toolkit'
 import { TypedUseSelectorHook, useDispatch, useSelector } from "react-redux";
 import { bindActionCreators } from "redux";
 
@@ -12,6 +11,7 @@ import rootReducer from "./index";
 import { RootState, initialState } from "./app";
 import { useMemo } from "react";
 import * as actions from "../actions";
+import { ExportableEd25519PublicKey, ExportableX25519PublicKey } from "@djack-sdk/interfaces";
 
 let defaultInitState: any = {};
 try {
@@ -28,9 +28,9 @@ try {
         defaultInitState.session = {
           publicKeys: keysJSON.publicKeys.map((publicKeyJWK) => {
             if (publicKeyJWK.crv === "Ed25519") {
-              return new Ed25519PublicKey(base64url.baseDecode(publicKeyJWK.x));
+              return new ExportableEd25519PublicKey(base64url.baseDecode(publicKeyJWK.x));
             }
-            return new X25519PublicKey(base64url.baseDecode(publicKeyJWK.x));
+            return new ExportableX25519PublicKey(base64url.baseDecode(publicKeyJWK.x));
           }),
         };
       }
@@ -69,4 +69,4 @@ export const useMountedApp = () => {
   };
 };
 
-export const wrapper = createWrapper<Store>(() => store);
+export const wrapper: Store = store;

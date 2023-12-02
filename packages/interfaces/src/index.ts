@@ -176,7 +176,7 @@ export type CreateNodeOptions<
   keyPair?: Domain.KeyPair;
   domain: string;
   didWebHostname: string;
-  publicKeys?: Domain.PublicKey[];
+  publicKeys?: (Domain.PublicKey & AbstractExportingKey)[];
   listen: string[];
   storage: StorageInterface;
   factory: DIDFactoryAbstract;

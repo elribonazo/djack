@@ -16,7 +16,7 @@ export default Base("browser", [
   }),
   nodePolyfills(),
   nodeResolve({
-    resolveOnly: ["didcomm"],
+    resolveOnly: ["didcomm", "anoncreds-wasm"],
   }),
   wasm({
     targetEnv: "browser",

@@ -1,3 +1,3 @@
 import Base from "../../../rollup/index.mjs";
 
-export default Base(null, []);
+export default Base();

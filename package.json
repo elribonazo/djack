@@ -27,12 +27,15 @@
     "packages/frontend"
   ],
   "devDependencies": {
-    "lerna": "^7.3.0",
-    "semantic-release": "^22.0.8",
     "@semantic-release/changelog": "^6.0.3",
     "@semantic-release/commit-analyzer": "^9.0.2",
     "@semantic-release/exec": "^6.0.3",
     "@semantic-release/git": "^10.0.1",
-    "@semantic-release/release-notes-generator": "^10.0.3"
+    "@semantic-release/release-notes-generator": "^10.0.3",
+    "lerna": "^8.0.0",
+    "nx": "16.8.1",
+    "rimraf": "^5.0.5",
+    "rollup": "^3.29.4",
+    "semantic-release": "^22.0.8"
   }
 }

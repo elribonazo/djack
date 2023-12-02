@@ -1,6 +1,5 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 /* eslint-disable react/no-unescaped-entities */
-import Image from "next/image";
 import { useEffect, useState } from "react";
 import { useMountedApp } from "../reducers/store";
 import Dexie from "dexie";
@@ -60,7 +59,7 @@ export const WalletConnect: React.FC<WalletConnectProps> = (props) => {
             hasNodeLoaded ? "bg-gray-800" : ""
           } focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800`}
         >
-          <Image
+          <img
             src="/gc.png"
             width={120}
             height={34}
@@ -90,7 +89,7 @@ export const WalletConnect: React.FC<WalletConnectProps> = (props) => {
                         >
                           <button>
                             <b>{name}</b>{" "}
-                            <Image
+                            <img
                               src="/gc.png"
                               width={120}
                               height={34}
@@ -104,7 +103,7 @@ export const WalletConnect: React.FC<WalletConnectProps> = (props) => {
                     <li>
                       <button onClick={onLogoutClick}>
                         <b>Logout</b>{" "}
-                        <Image
+                        <img
                           src="/gc.png"
                           width={120}
                           height={34}
@@ -193,7 +192,7 @@ export const WalletConnect: React.FC<WalletConnectProps> = (props) => {
             )}
 
           <button onClick={() => onWalletConnectClick(account)} className="mt-4">
-            <Image
+            <img
               src="/gc.png"
               width={120}
               height={34}

@@ -6,7 +6,6 @@ import HeaderNav from '../components/headerNav';
 import { AppConfig } from '../utils/AppConfig';
 
 type IMainProps = {
-  meta: ReactNode;
   children: ReactNode;
 };
 
@@ -14,7 +13,6 @@ const Main = (props: IMainProps) => {
   return (
     <div className="leading-normal tracking-normal text-indigo-400 m-0 sm:m-6 bg-cover bg-fixed mt-0">
     <div className="antialiased w-full text-gray-700 px-0 sm:px-4">
-      {props.meta}
       <div className="mx-auto">
         <HeaderNav />
         <div className="py-5 text-white text-xl content bg-gray-900 opacity-75 w-full shadow-lg rounded-br-lg rounder-bl-lg px-8 pt-6 pb-8 mb-4">

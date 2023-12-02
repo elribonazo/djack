@@ -6,12 +6,9 @@ import {
   fromDIDCOMMType,
   toDIDCOMMType,
 } from "@djack-sdk/interfaces";
-import { getDidcommLibInstance } from "./didcomm";
+import { DIDCommWrapper } from '@atala/prism-wallet-sdk';
 
-const didcommPKG =
-  typeof window !== "undefined"
-    ? await getDidcommLibInstance()
-    : await import("didcomm-node");
+const didcommPKG = await DIDCommWrapper.getDIDComm()
 
 abstract class BaseMessage implements Partial<IMessage> {
   public id = uuidv4();

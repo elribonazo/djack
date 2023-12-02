@@ -17,7 +17,6 @@ import {
   Message
 } from "didcomm-node";
 import {
-  ExportFormats,
   CreateNodeOptions,
   NodeOptions,
   PROTOCOLS,
@@ -28,21 +27,18 @@ import {
   DEFAULT_SERVICES,
   ExportableEd25519PrivateKey,
   ExportableEd25519PublicKey,
-  AbstractExportingKey,
 } from "@djack-sdk/interfaces";
-import { Domain, Apollo, Castor } from '@atala/prism-wallet-sdk';
+import { Domain, Apollo, Castor, DIDCommWrapper, AnoncredsLoader } from '@atala/prism-wallet-sdk';
 
 import type { DIDFactory } from "@djack-sdk/did-peer";
 import {
   createX25519FromEd25519KeyPair,
   createX25519PublicKeyFromEd25519PublicKey,
 } from "@djack-sdk/did-peer";
-import { AnoncredsLoader } from "./AnoncredsLoader";
-import { getDidcommLibInstance } from "./didcomm";
 import { didUrlFromString } from "@djack-sdk/shared";
 
 export * from "./Task";
-export * from "./AnoncredsLoader";
+export { AnoncredsLoader } from '@atala/prism-wallet-sdk';
 export * from "./Protocols";
 
 const apollo = new Apollo();
@@ -116,7 +112,7 @@ export class Network<T extends Record<string, unknown> = DEFAULT_SERVICES> {
   public static async getDIDComm() {
     if (!this.didcomm) {
       if (typeof window !== "undefined")
-        this.didcomm = await getDidcommLibInstance();
+        this.didcomm = await DIDCommWrapper.getDIDComm();
       else this.didcomm = await import("didcomm-node");
     }
     return this.didcomm;

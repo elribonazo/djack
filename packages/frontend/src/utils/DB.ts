@@ -1,8 +1,8 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
-import { Ed25519PrivateKey, X25519PrivateKey } from "@djack-sdk/did-peer";
-import { AbstractStore, Curve, DID, PrivateKey } from "@djack-sdk/interfaces";
+import { AbstractStore, ExportableEd25519PrivateKey, ExportableX25519PrivateKey } from "@djack-sdk/interfaces";
 import { PeerId } from "@libp2p/interface-peer-id";
 import Dexie from "dexie";
+import type { Domain } from "@atala/prism-wallet-sdk";
 
 export type dbKey = {
   id?: number;
@@ -221,7 +221,7 @@ export class DB implements AbstractStore {
   async findKeysByDID(search?: {
     did?: string | string[];
     peerId?: string | string[];
-  }): Promise<PrivateKey[]> {
+  }): Promise<Domain.PrivateKey[]> {
     await this.apply();
     const results: dbKey[] = [];
     const searchField = search?.did ? "did" : search?.peerId ? "peerId" : null;
@@ -239,21 +239,22 @@ export class DB implements AbstractStore {
         );
       }
     }
-    return results.map(this.toKey);
+    return await Promise.all(results.map(this.toKey));
   }
 
-  private toKey(dbKey: dbKey) {
+  private async toKey(dbKey: dbKey) {
     const raw = Buffer.from(dbKey.rawHex, "hex");
     const type = dbKey.type;
-    if (type === Curve.ED25519) {
-      return new Ed25519PrivateKey(raw);
-    } else if (type === Curve.X25519) {
-      return new X25519PrivateKey(raw);
+    const { Domain } = await import("@atala/prism-wallet-sdk")
+    if (type === Domain.Curve.ED25519) {
+      return new ExportableEd25519PrivateKey(raw);
+    } else if (type === Domain.Curve.X25519) {
+      return new ExportableX25519PrivateKey(raw);
     }
     throw new Error("Not implemented");
   }
 
-  async addDIDKey(did: DID, peerId: PeerId, key: PrivateKey): Promise<void> {
+  async addDIDKey(did: Domain.DID, peerId: PeerId, key: Domain.PrivateKey): Promise<void> {
     await this.apply();
     await this.didsTable.add({
       did: did.toString(),
@@ -263,10 +264,37 @@ export class DB implements AbstractStore {
     });
   }
 
-  async findAllDIDs(): Promise<DID[]> {
+  async findAllDIDs(): Promise<Domain.PeerDID[]> {
     await this.apply();
-    return (await this.didsTable.toArray()).map((row) =>
-      DID.fromString(row.did)
-    );
+    const results = await this.didsTable.toArray()
+    const { Domain } = await import("@atala/prism-wallet-sdk")
+    return results.reduce<Domain.PeerDID[]>((allPeerDIDS, current) => {
+      const index = allPeerDIDS.findIndex((peer) => peer.did.toString() === current.did)
+      const key = current.type === Domain.Curve.ED25519 ?
+        new ExportableEd25519PrivateKey(Buffer.from(current.rawHex, 'hex')) :
+        new ExportableX25519PrivateKey(Buffer.from(current.rawHex, 'hex'));
+      if (index > 0) {
+        allPeerDIDS[index]?.privateKeys.push({
+          keyCurve: {
+            curve: key.curve as Domain.Curve,
+          },
+          value: key.raw
+        })
+
+        return allPeerDIDS
+      }
+      allPeerDIDS.push({
+        did: Domain.DID.fromString(current.did),
+        privateKeys: [
+          {
+            keyCurve: {
+              curve: key.curve as Domain.Curve,
+            },
+            value: key.raw
+          }
+        ]
+      });
+      return allPeerDIDS;
+    }, [])
   }
 }

@@ -1,25 +1,19 @@
 /* eslint-disable import/no-webpack-loader-syntax */
 
 import { ReactNode } from "react";
-import dynamic from "next/dynamic";
+import {WalletConnect} from "../components/WalletConnect";
 
 import { AppConfig } from "../utils/AppConfig";
 import StateIndicator from "../components/StateIndicator";
 
 type IMainProps = {
-  meta: ReactNode;
   children: ReactNode;
   abort: AbortController;
 };
 
-const WalletConnect = dynamic(() => import("../components/WalletConnect"), {
-  ssr: false,
-});
-
 const App = (props: IMainProps) => {
   return (
     <div className="antialiased w-full text-gray-700 min-h-screen flex flex-col ">
-      {props.meta}
       <nav className="bg-gray-900 fixed w-full z-20 top-0 left-0 border-b  border-gray-600">
         <div className="max-w-screen-xl flex flex-wrap items-center justify-between mx-auto p-4">
           <button type="button" className="flex items-center">

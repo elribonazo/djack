@@ -1,6 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
 
-import Link from "next/link";
 
 const menuElements = [
   {
@@ -36,7 +35,7 @@ const Nav = () => {
     <nav className="sticky top-0 sm:relative sm:top-auto z-50 text-gray-900">
       <div className="mx-auto flex-row  sm:flex justify-between">
         <div className="flex flex-wrap bg-gray-800 sm:bg-transparent   py-4 px-4 text-xl font-bold ">
-          <Link
+          <a
             href="/"
             className=" flex-1 text-indigo-400 hover:no-underline font-bold text-4xl"
           >
@@ -44,7 +43,7 @@ const Nav = () => {
             <span className="bg-clip-text text-transparent bg-gradient-to-r from-green-400 via-pink-500 to-purple-500">
               DJACK BETA
             </span>
-          </Link>
+          </a>
           <button
             onClick={onToggleClick}
             className="flex-none align-self-end sm:hidden text-white z-30 x-8 h-8 focus:outline-none md:hidden"
@@ -71,12 +70,12 @@ const Nav = () => {
               key={`MenuEl${i}`}
               className="text-gray-700 border-fuchsia-600 bg-gray-800 opacity-75 sm:bg-transparent sm:opacity-100  border-transparent hover:no-underline hover:border-blue-700 hover:bg-gray-800 sm:hover:bg-gray-900  hover:opacity-75 hover:text-white"
             >
-              <Link
+              <a
                 href={link}
                 className={`text-gray-700 relative block py-6 px-2 lg:p-6 text-sm lg:text-base font-bold hover:text-gray-500`}
               >
                 {name}
-              </Link>
+              </a>
             </li>
           ))}
         </ul>
@@ -87,13 +86,13 @@ const Nav = () => {
                 key={`MenuEl${i}`}
                 className="flex-1 text-gray-700 border-fuchsia-600 bg-gray-800 sm:bg-transparent sm:opacity-100  border-transparent hover:no-underline hover:border-blue-700 hover:bg-gray-800 sm:hover:bg-gray-900 "
               >
-                <Link href={link}>
+                <a href={link}>
                   <a
                     className={`text-gray-700 relative block py-6 px-2 lg:p-6 text-sm lg:text-base font-bold `}
                   >
                     {name}
                   </a>
-                </Link>
+                </a>
               </li>
             ))}
           </ul>

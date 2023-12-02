@@ -5,16 +5,11 @@ import modify from "rollup-plugin-modify";
 import Base from "../../../rollup/index.mjs";
 
 export default Base("node", [
-  modify({
-    find: "'anoncreds-browser/",
-    replace: "'anoncreds-wasm/"
-  }),
   nodeResolve({
     exportConditions: ["node"],
     preferBuiltins: true,
     resolveOnly: ['anoncreds-wasm'],
   }),
-
   wasm({
     targetEnv: "node",
     fileName: "[name][extname]",

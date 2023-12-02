@@ -26,11 +26,10 @@ import { pingService } from "libp2p/ping";
 import {
   PROTOCOLS,
   CreateNodeOptions,
-  PublicKey,
-  Curve,
   ExportFormats,
   ExcludeKeys,
   toDIDCOMMType,
+  AbstractExportingKey,
 } from "@djack-sdk/interfaces";
 import { identifyService } from "libp2p/identify";
 import { autoNATService } from "libp2p/autonat";
@@ -46,13 +45,13 @@ import { create } from "../utils/gc";
 import { DID_WEB_DOMAIN, DOMAIN, NEXT_DOMAIN } from "../config";
 import type { Message } from "didcomm";
 import { MutableParsedMail } from "../utils/types";
-import { Anoncreds } from "@djack-sdk/network/build/typings/Anoncreds";
 import { circuitRelayTransport } from "libp2p/circuit-relay";
 import { bootstrap } from "@libp2p/bootstrap";
 import { ipnsSelector } from "ipns/selector";
 import { ipnsValidator } from "ipns/validator";
 
 import { webRTCDirect, webRTC } from "@libp2p/webrtc";
+import type { Domain } from "@atala/prism-wallet-sdk";
 
 const webResolver = getResolver();
 const didResolver = new Resolver(webResolver);
@@ -185,7 +184,7 @@ export const walletConnectRequest = createAsyncThunk(
 
 export const walletConnect = createAsyncThunk(
   "walletConnect",
-  async (data: PublicKey[], api) => {
+  async (data: (Domain.PublicKey & AbstractExportingKey)[], api) => {
     return api.fulfillWithValue(data);
   }
 );
@@ -236,15 +235,15 @@ export const connectDatabase = createAsyncThunk<
   DB,
   {
     name: string;
-    publicKeys: PublicKey[];
+    publicKeys: (Domain.PublicKey & AbstractExportingKey)[];
   },
   { state: { app: RootState } }
 >("connectDatabase", async (options, api) => {
   try {
     console.log(`[connectDatabase] Starting`);
-
+    const { Domain } = await import("@atala/prism-wallet-sdk")
     const { name, publicKeys } = options;
-    const ed25519 = publicKeys.find((key) => key.curve === Curve.ED25519)!;
+    const ed25519 = publicKeys.find((key) => key.curve === Domain.Curve.ED25519)!;
     const ed25519JWK = ed25519.export(ExportFormats.JWK);
     const pass = createHash("sha256")
       .update(`djack:${name}:${Buffer.from(ed25519JWK).toString("hex")}`)
@@ -759,7 +758,7 @@ export const requestCredentialOffer = createAsyncThunk<
   {
     offer: Message;
     credential: Message;
-    request: [Anoncreds.CredentialRequest, Anoncreds.CredentialRequestMeta];
+    request: [Domain.Anoncreds.CredentialRequest, Domain.Anoncreds.CredentialRequestMeta];
   },
   {
     name: string;

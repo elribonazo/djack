@@ -16,7 +16,7 @@ import NavigationItemsContainer from "./NavigationItemsContainer";
 import { useEffect, useState } from "react";
 import { NavigationItemLabel } from "./InboxTypes";
 import { CredentialsContainer } from "./CredentialsContainer";
-import { dbEmail } from "../utils/DB";
+import type { dbEmail } from "../utils/DB";
 
 const EmailLayout = () => {
   const mounted = useMountedApp();

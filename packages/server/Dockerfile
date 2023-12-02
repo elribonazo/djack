@@ -7,7 +7,7 @@ WORKDIR /usr/src/app
 ENV NODE_ENV=development
 ARG NODE_ENV=development
 COPY ./packages/server/package.json /usr/src/app/package.json
-RUN npm install 
+RUN npm install --production
 
 COPY ./packages/frontend/out /frontend/out
 COPY ./packages/server /usr/src/app

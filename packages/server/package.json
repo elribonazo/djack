@@ -24,7 +24,7 @@
     "djack-server": "./.bin/djack-server"
   },
   "dependencies": {
-    "@atala/prism-wallet-sdk": "^3.1.0",
+    "@atala/prism-wallet-sdk": "file:../../../../iohk/atala-prism-wallet-sdk-ts",
     "@aviarytech/did-peer": "^0.0.21",
     "@djack-sdk/did-peer": "^0.1.16",
     "@djack-sdk/interfaces": "^0.1.15",
@@ -77,7 +77,6 @@
     "@types/ws": "^8.5.5",
     "@typescript-eslint/eslint-plugin": "^5.62.0",
     "@typescript-eslint/parser": "^5.55.0",
-    "better-sqlite3-multiple-ciphers": "^8.5.1",
     "concurrently": "^8.2.1",
     "cross-env": "^7.0.3",
     "eslint": "^8.47.0",

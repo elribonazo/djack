@@ -19,7 +19,7 @@
     "prepublishOnly": "npm run build"
   },
   "dependencies": {
-    "@atala/prism-wallet-sdk": "^3.1.0",
+    "@atala/prism-wallet-sdk": "file:../../../../iohk/atala-prism-wallet-sdk-ts",
     "@djack-sdk/interfaces": "^0.1.15",
     "@djack-sdk/shared": "^0.1.16",
     "@libp2p/crypto": "^2.0.3",
@@ -31,6 +31,14 @@
     "multiformats": "^12.0.1"
   },
   "devDependencies": {
+    "@babel/plugin-proposal-private-property-in-object": "^7.21.11",
+    "@craco/craco": "^5.9.0",
+    "assert": "^2.0.0",
+    "buffer": "^6.0.3",
+    "copy-webpack-plugin": "^11.0.0",
+    "path-browserify": "^1.0.1",
+    "stream-browserify": "^3.0.0",
+    "url": "^0.11.0",
     "@rollup/plugin-commonjs": "^25.0.0",
     "@rollup/plugin-inject": "^5.0.3",
     "@rollup/plugin-json": "^6.0.0",

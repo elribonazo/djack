@@ -19,7 +19,7 @@
     "build/*"
   ],
   "dependencies": {
-    "@atala/prism-wallet-sdk": "^3.1.0",
+    "@atala/prism-wallet-sdk": "file:../../../../iohk/atala-prism-wallet-sdk-ts",
     "@djack-sdk/interfaces": "^0.1.15",
     "@libp2p/interface-peer-id": "^2.0.2",
     "did-resolver": "^4.1.0",

@@ -10,6 +10,7 @@ const externals = [
   "crypto",
   "express",
   "http",
+  "@atala/prism-wallet-sdk",
   "@emurgo/cardano-serialization-lib-nodejs",
   "@scure/bip39",
   "@hyperledger/anoncreds-nodejs",

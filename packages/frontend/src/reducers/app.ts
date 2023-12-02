@@ -16,9 +16,7 @@ import {
 import { v4 as uuidv4 } from "uuid";
 import { PeerId } from "@libp2p/interface/peer-id";
 import { Message } from "didcomm";
-import { Anoncreds } from "@djack-sdk/network/build/typings/Anoncreds";
 import { DB, dbCredential, dbEmail } from "../utils/DB";
-import { PublicKey } from "@djack-sdk/interfaces";
 import { PayloadAction, createSlice } from "@reduxjs/toolkit";
 import {
   cancellTask,
@@ -35,6 +33,10 @@ import {
   walletConnect,
 } from "../actions";
 import { Nullable } from "../utils/types";
+import type {
+  Domain,
+} from '@atala/prism-wallet-sdk';
+import { AbstractExportingKey } from "@djack-sdk/interfaces";
 
 class TraceableError extends Error {
   public id = uuidv4();
@@ -59,12 +61,12 @@ export type PeerRecord = {
   linkSecret: Nullable<string>;
   credentialId: Nullable<number>;
   request: Nullable<
-    [Anoncreds.CredentialRequest, Anoncreds.CredentialRequestMeta]
+    [Domain.Anoncreds.CredentialRequest, Domain.Anoncreds.CredentialRequestMeta]
   >;
 };
 
 export type DJACKSession = {
-  publicKeys: PublicKey[];
+  publicKeys: (Domain.PublicKey & AbstractExportingKey)[];
 };
 
 export type RootState = {
@@ -113,7 +115,7 @@ export const initialState: RootState = {
   name: null,
   peers: [] as PeerRecord[],
   session: {
-    publicKeys: [] as PublicKey[],
+    publicKeys: [] as (Domain.PublicKey & AbstractExportingKey)[],
   },
 };
 

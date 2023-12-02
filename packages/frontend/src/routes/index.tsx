@@ -1,17 +1,11 @@
 /* eslint-disable react/no-unescaped-entities */
 
-import { Meta } from "../layout/Meta";
 import { Main } from "../templates/Main";
 
 const Index = () => {
   return (
     <Main
-      meta={
-        <Meta
-          title="DJACK"
-          description="Empowering Your Email Experience on Cardano's Decentralized Network Unveiling DJack, the pioneering serverless email service built exclusively for Cardano."
-        />
-      }
+     
     >
       <h1 className="font-bold text-3xl">Introduction</h1>
       <p>

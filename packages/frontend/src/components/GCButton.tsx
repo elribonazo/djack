@@ -1,7 +1,5 @@
 import { useEffect, useState } from "react";
-import Image from "next/image";
 import { GC_SCRIPT, create } from "../utils/gc";
-import Link from "next/link";
 
 type GCButtonProps = {
   script: GC_SCRIPT;
@@ -27,7 +25,7 @@ const GCButton: React.FC<GCButtonProps> = (props) => {
   if (props.onClick) {
     return (
       <button onClick={props.onClick} className="mt-4">
-        <Image
+        <img
           src="/gc.png"
           width={120}
           height={34}
@@ -39,15 +37,15 @@ const GCButton: React.FC<GCButtonProps> = (props) => {
   }
 
   return (
-    <Link href={url} className="mt-4">
-      <Image
+    <a href={url} className="mt-4">
+      <img
         src="/gc.png"
         width={120}
         height={34}
         alt="QR Code"
         className="rounded-lg mb-1"
       />
-    </Link>
+    </a>
   );
 };
 

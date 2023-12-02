@@ -1,4 +1,3 @@
-import type { DIDDoc } from "didcomm-node";
 import { DIDResolutionOptions, DIDResolutionResult } from "did-resolver";
 import { Domain } from '@atala/prism-wallet-sdk';
 
