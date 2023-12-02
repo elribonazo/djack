@@ -3,11 +3,11 @@
 import JSONURL from "json-url";
 /* eslint-disable react/no-unescaped-entities */
 import { useEffect, useMemo, useState } from "react";
+import { sha256 } from '@noble/hashes/sha256';
 
 import { App } from "../templates/App";
 import { LoadingScreen } from "../components/LoadingScreen";
 import { useMountedApp } from "../reducers/store";
-import { createHash } from "crypto";
 import { peerIdFromString } from "@libp2p/peer-id";
 import EmailLayout from "../components/EmailLayout";
 
@@ -70,13 +70,9 @@ const AppTemplate: React.FC = () => {
               });
   
               const publicKeys = [ed25519, x25519];
-              const pass = createHash("sha256")
-                .update(
-                  `djack:${name.replace("djack:", "")}:${Buffer.from(
-                    ed25519JWK
-                  ).toString("hex")}`
-                )
-                .digest();
+              const pass = sha256( `djack:${name.replace("djack:", "")}:${Buffer.from(
+                ed25519JWK
+              ).toString("hex")}`)
   
               import("../utils/DB").then(({DB}) => {
                 mounted.loadNode({
@@ -159,13 +155,9 @@ const AppTemplate: React.FC = () => {
           ({ curve }) => curve === Domain.Curve.ED25519
         )!;
         const ed25519JWK = ed25519.export(ExportFormats.JWK);
-        const pass = createHash("sha256")
-          .update(
-            `djack:${name.replace("djack:", "")}:${Buffer.from(
-              ed25519JWK
-            ).toString("hex")}`
-          )
-          .digest();
+        const pass = sha256( `djack:${name.replace("djack:", "")}:${Buffer.from(
+          ed25519JWK
+        ).toString("hex")}`)
           import("../utils/DB").then(({DB}) => {
             mounted.loadNode({
               listen: [],

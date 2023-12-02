@@ -8,4 +8,3 @@ export const port = 4977;
 export const DID_WEB_DOMAIN = process.env.NEXT_PUBLIC_DIDWEB_HOST;
 export const DOMAIN = process.env.NEXT_PUBLIC_DIDWEB_HOSTNAME;
 export const NEXT_DOMAIN = process.env.NEXT_PUBLIC_DOMAIN;
-debugger;

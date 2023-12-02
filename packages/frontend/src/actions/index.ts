@@ -18,6 +18,9 @@ import { StorageManager } from "@djack-sdk/shared";
 import { type PeerId } from "@libp2p/interface/peer-id";
 import * as filters from "@libp2p/websockets/filters";
 import axios from "axios";
+import { sha256 } from '@noble/hashes/sha256';
+import { sha512 } from '@noble/hashes/sha512';
+
 import { Connection } from "@libp2p/interface/connection";
 import { RootState, reduxActions } from "../reducers/app";
 import { Registry } from "../utils/registry";
@@ -39,7 +42,6 @@ import { DB } from "../utils/DB";
 import { createAsyncThunk } from "@reduxjs/toolkit";
 import { kadDHT } from "@libp2p/kad-dht";
 import { dcutrService } from "libp2p/dcutr";
-import { createHash } from "crypto";
 import { webSockets } from "@libp2p/websockets";
 import { create } from "../utils/gc";
 import { DID_WEB_DOMAIN, DOMAIN, NEXT_DOMAIN } from "../config";
@@ -131,7 +133,7 @@ export const load = createAsyncThunk("load", async (_body: any, api) => {
     const anoncreds = await Network.getAnoncreds();
     const didcomm = await Network.getDIDComm();
     console.log(`[LOAD] Dependencies loaded`);
-
+    debugger;
     return api.fulfillWithValue({
       anoncreds,
       didcomm,
@@ -245,10 +247,7 @@ export const connectDatabase = createAsyncThunk<
     const { name, publicKeys } = options;
     const ed25519 = publicKeys.find((key) => key.curve === Domain.Curve.ED25519)!;
     const ed25519JWK = ed25519.export(ExportFormats.JWK);
-    const pass = createHash("sha256")
-      .update(`djack:${name}:${Buffer.from(ed25519JWK).toString("hex")}`)
-      .digest();
-
+    const pass = sha256((`djack:${name}:${Buffer.from(ed25519JWK).toString("hex")}`))
     const db = new DB(name, pass);
     await db.findAllDIDs();
     console.log(`[connectDatabase] ok`);
@@ -543,9 +542,7 @@ export const loadNode = createAsyncThunk<
                 DOMAIN!
               );
               console.log(credential);
-              const bodyHash = createHash("sha512")
-                .update(Buffer.from(JSON.stringify(body)).toString("hex"))
-                .digest();
+              const bodyHash = sha512(Buffer.from(JSON.stringify(body)).toString("hex"))
               dispatch(
                 reduxActions.acceptCredentialSignaturePending({
                   peer: connection.remotePeer,

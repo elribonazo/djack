@@ -1,4 +1,5 @@
 const webpack = require('webpack');
+const path = require('path')
 require('dotenv').config();
 
 module.exports = {
@@ -6,7 +7,7 @@ module.exports = {
     configure: (webpackConfig) => {
       webpackConfig.resolve.fallback = {
         fs: false,
-        crypto: false,
+        crypto: require.resolve(path.join(__dirname, "../../", "node_modules/crypto-browserify")),
         stream: require.resolve("stream-browserify"),
         path: require.resolve("path-browserify"),
       };

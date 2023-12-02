@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 import React, { useEffect, useState } from "react";
 import { Connection } from "@libp2p/interface/connection";
+import { sha512 } from '@noble/hashes/sha512';
 
 import { useMountedApp } from "../reducers/store";
 import { NEXT_DOMAIN } from "../config";
@@ -9,7 +10,6 @@ import { LoadingScreen } from "./LoadingScreen";
 import { PeerRecord } from "../reducers/app";
 import { Network } from "@djack-sdk/network";
 import { getResourceFromConnection } from "../actions";
-import { createHash } from "crypto";
 
 type CredentialsContainerProps = any;
 
@@ -52,9 +52,7 @@ export const CredentialsContainer: React.FC<CredentialsContainerProps> = () => {
           linkSecret,
           "demo"
         );
-        const requestedSignature = createHash("sha512")
-          .update(Buffer.from(JSON.stringify(credentialRequest)))
-          .digest();
+        const requestedSignature = sha512(Buffer.from(JSON.stringify(credentialRequest)))
 
         const loadedPeer: any = {
           ...peers[i],

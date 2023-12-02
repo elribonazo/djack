@@ -1,6 +1,7 @@
 import type { PeerId } from "@libp2p/interface-peer-id";
 import type { StreamHandler } from "@libp2p/interface/stream-handler";
 import type { Libp2p } from "libp2p";
+import { base64url } from "multiformats/bases/base64";
 import type { PubSub } from "@libp2p/interface/pubsub";
 import type { GossipsubEvents } from "@chainsafe/libp2p-gossipsub";
 import { type Transport } from "@libp2p/interface/transport";
@@ -34,7 +35,7 @@ export class ExportableEd25519PublicKey extends Ed25519PublicKey implements Abst
         JSON.stringify({
           crv: this.curve,
           kty: "OKP",
-          x: Buffer.from(this.getEncoded()).toString('base64url'),
+          x: base64url.baseEncode(this.getEncoded()),
         })
       );
     }
@@ -52,8 +53,8 @@ export class ExportableEd25519PrivateKey extends Ed25519PrivateKey implements Ab
         JSON.stringify({
           crv: this.curve,
           kty: "OKP",
-          x: Buffer.from(this.publicKey().getEncoded()).toString('base64url'),
-          d: Buffer.from(this.getEncoded()).toString('base64url'),
+          x: base64url.baseEncode(this.publicKey().getEncoded()),
+          d: base64url.baseEncode(this.getEncoded()),
         })
       );
     }
