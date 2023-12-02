@@ -5,6 +5,7 @@ require('dotenv').config();
 module.exports = {
   webpack: {
     configure: (webpackConfig) => {
+      webpackConfig.devtool = "inline-source-map"
       webpackConfig.resolve.fallback = {
         fs: false,
         crypto: require.resolve(path.join(__dirname, "../../", "node_modules/crypto-browserify")),

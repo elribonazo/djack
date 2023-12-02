@@ -24,8 +24,7 @@ import { sha512 } from '@noble/hashes/sha512';
 import { Connection } from "@libp2p/interface/connection";
 import { RootState, reduxActions } from "../reducers/app";
 import { Registry } from "../utils/registry";
-import { gossipsub } from "@chainsafe/libp2p-gossipsub";
-import { pingService } from "libp2p/ping";
+import { ping } from "@libp2p/ping";
 import {
   PROTOCOLS,
   CreateNodeOptions,
@@ -34,20 +33,20 @@ import {
   toDIDCOMMType,
   AbstractExportingKey,
 } from "@djack-sdk/interfaces";
-import { identifyService } from "libp2p/identify";
-import { autoNATService } from "libp2p/autonat";
+import { identify } from "@libp2p/identify";
+import { autoNAT } from "@libp2p/autonat";
 
 import { multiaddr } from "@multiformats/multiaddr";
 import { DB } from "../utils/DB";
 import { createAsyncThunk } from "@reduxjs/toolkit";
 import { kadDHT } from "@libp2p/kad-dht";
-import { dcutrService } from "libp2p/dcutr";
+import { dcutr } from "@libp2p/dcutr";
 import { webSockets } from "@libp2p/websockets";
 import { create } from "../utils/gc";
 import { DID_WEB_DOMAIN, DOMAIN, NEXT_DOMAIN } from "../config";
 import type { Message } from "didcomm";
 import { MutableParsedMail } from "../utils/types";
-import { circuitRelayTransport } from "libp2p/circuit-relay";
+import { circuitRelayTransport } from "@libp2p/circuit-relay-v2";
 import { bootstrap } from "@libp2p/bootstrap";
 import { ipnsSelector } from "ipns/selector";
 import { ipnsValidator } from "ipns/validator";
@@ -133,7 +132,6 @@ export const load = createAsyncThunk("load", async (_body: any, api) => {
     const anoncreds = await Network.getAnoncreds();
     const didcomm = await Network.getDIDComm();
     console.log(`[LOAD] Dependencies loaded`);
-    debugger;
     return api.fulfillWithValue({
       anoncreds,
       didcomm,
@@ -339,17 +337,16 @@ export const loadNode = createAsyncThunk<
       storage,
       registry,
       transports,
-      listen: ["/webrtc"],
+      listen: [],
       services: {
-        identify: identifyService(),
-        autoNAT: autoNATService(),
-        pubsub: gossipsub(),
-        dcutr: dcutrService(),
+        identify: identify(),
+        autoNAT: autoNAT(),
+        dcutr: dcutr(),
         dht: kadDHT({
           validators: { ipns: ipnsValidator },
           selectors: { ipns: ipnsSelector },
         }),
-        ping: pingService(),
+        ping: ping(),
       },
       peerDiscovery: [
         bootstrap({

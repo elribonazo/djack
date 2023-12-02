@@ -244,11 +244,14 @@ export class DB implements AbstractStore {
 
   private async toKey(dbKey: dbKey) {
     const raw = Buffer.from(dbKey.rawHex, "hex");
+    debugger;
     const type = dbKey.type;
     const { Domain } = await import("@atala/prism-wallet-sdk")
     if (type === Domain.Curve.ED25519) {
+      debugger;
       return new ExportableEd25519PrivateKey(raw);
     } else if (type === Domain.Curve.X25519) {
+      debugger;
       return new ExportableX25519PrivateKey(raw);
     }
     throw new Error("Not implemented");
@@ -273,7 +276,7 @@ export class DB implements AbstractStore {
       const key = current.type === Domain.Curve.ED25519 ?
         new ExportableEd25519PrivateKey(Buffer.from(current.rawHex, 'hex')) :
         new ExportableX25519PrivateKey(Buffer.from(current.rawHex, 'hex'));
-      if (index > 0) {
+      if (index >= 0) {
         allPeerDIDS[index]?.privateKeys.push({
           keyCurve: {
             curve: key.curve as Domain.Curve,

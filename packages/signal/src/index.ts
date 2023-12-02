@@ -7,8 +7,8 @@ import { type PeerId } from "@libp2p/interface/peer-id";
 import {
   circuitRelayTransport,
   circuitRelayServer,
-} from "libp2p/circuit-relay";
-import { identifyService } from "libp2p/identify";
+} from "@libp2p/circuit-relay-v2";
+import { identify } from "@libp2p/identify";
 import * as filters from "@libp2p/websockets/filters";
 import { supportedKeys } from "@libp2p/crypto/keys";
 import { peerIdFromKeys } from "@libp2p/peer-id";
@@ -17,15 +17,13 @@ import { createEd25519KeyPair, createX25519FromEd25519KeyPair } from "@djack-sdk
 import { Service } from "didcomm-node";
 import { Domain, Castor, Apollo } from '@atala/prism-wallet-sdk';
 import { AbstractExportingKey, ExportFormats, ExportableEd25519PrivateKey, ExportableEd25519PublicKey } from "@djack-sdk/interfaces";
+import { kadDHT } from "@libp2p/kad-dht";
 
-// TODO find out which of this services is causing the CPU to go up
-// import { kadDHT } from "@libp2p/kad-dht";
-// import { autoNATService } from "libp2p/autonat";
-// import { dcutrService } from "libp2p/dcutr";
-// import { gossipsub } from "@chainsafe/libp2p-gossipsub";
-// import { pingService } from "libp2p/ping";
-// import { ipnsSelector } from "ipns/selector";
-// import { ipnsValidator } from "ipns/validator";
+import { autoNAT } from "@libp2p/autonat";
+import { dcutr } from "@libp2p/dcutr";
+import { ping } from "@libp2p/ping";
+import { ipnsSelector } from "ipns/selector";
+import { ipnsValidator } from "ipns/validator";
 
 import HTTP from "./http.js";
 
@@ -57,10 +55,6 @@ const createHttpForPeerId = (
   peerId: PeerId,
   peerDID: Domain.DID,
   didWeb: string,
-  listen: string,
-  announce: string,
-  pk: string,
-  pu: string
 ) =>
   HTTP.create({
     routes: [
@@ -214,7 +208,7 @@ const listenAddress = `/ip4/${signalingHost}/tcp/${signalingPort}/ws`;
 const didweb = `did:web:${domain}`;
 console.log("Starting with ", { pk, pu, peerId, peerDID, announce, listenAddress })
 
-const http = createHttpForPeerId(peerId, peerDID, didweb, listenAddress, announce, pk, pu);
+const http = createHttpForPeerId(peerId, peerDID, didweb);
 const websockets = webSockets({
   websocket: http.websocket._opts,
   server: http.server,
@@ -231,16 +225,15 @@ const relayNode = await createLibp2p({
   connectionEncryption: [noise()],
   streamMuxers: [yamux(), mplex()],
   services: {
-    identify: identifyService(),
+    identify: identify(),
     //TODO find out which of this services is causing the CPU to go up
-    // autoNAT: autoNATService(),
-    // pubsub: gossipsub(),
-    // dcutr: dcutrService(),
-    // dht: kadDHT({
-    //   validators: { ipns: ipnsValidator },
-    //   selectors: { ipns: ipnsSelector },
-    // }),
-    //ping: pingService(),
+    autoNAT: autoNAT(),
+    dcutr: dcutr(),
+    dht: kadDHT({
+      validators: { ipns: ipnsValidator },
+      selectors: { ipns: ipnsSelector },
+    }),
+    ping: ping(),
     relay: circuitRelayServer({
       advertise: true,
       reservations: {

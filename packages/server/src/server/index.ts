@@ -16,16 +16,15 @@ import { DEFAULT_HTTP_PORT } from "../Config";
 import { AKEY, MailServerProps, ServerConstructorProps } from "../types";
 import { webSockets } from "@libp2p/websockets";
 import * as filters from "@libp2p/websockets/filters";
-import { identifyService } from "libp2p/identify";
-import { gossipsub } from "@chainsafe/libp2p-gossipsub";
-import { pingService } from "libp2p/ping";
+import { identify } from "@libp2p/identify";
+import { ping } from "@libp2p/ping";
 import { fileURLToPath } from "url";
 
-import { circuitRelayTransport } from "libp2p/circuit-relay";
+import { circuitRelayTransport } from "@libp2p/circuit-relay-v2";
 
 import { kadDHT } from "@libp2p/kad-dht";
-import { autoNATService } from "libp2p/autonat";
-import { dcutrService } from "libp2p/dcutr";
+import { autoNAT } from "@libp2p/autonat";
+import { dcutr } from "@libp2p/dcutr";
 import { ipnsSelector } from "ipns/selector";
 import { ipnsValidator } from "ipns/validator";
 import { webRTCDirect, webRTC } from "@libp2p/webrtc";
@@ -127,15 +126,14 @@ export class Server<T extends Record<string, unknown>> {
         }),
       ],
       services: {
-        identify: identifyService(),
-        autoNAT: autoNATService(),
-        pubsub: gossipsub(),
-        dcutr: dcutrService(),
+        identify: identify(),
+        autoNAT: autoNAT(),
+        dcutr: dcutr(),
         dht: kadDHT({
           validators: { ipns: ipnsValidator },
           selectors: { ipns: ipnsSelector },
         }),
-        ping: pingService(),
+        ping: ping(),
       },
     });
 

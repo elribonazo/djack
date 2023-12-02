@@ -2,8 +2,8 @@ import type { PeerId } from "@libp2p/interface-peer-id";
 import type { StreamHandler } from "@libp2p/interface/stream-handler";
 import type { Libp2p } from "libp2p";
 import { base64url } from "multiformats/bases/base64";
-import type { PubSub } from "@libp2p/interface/pubsub";
-import type { GossipsubEvents } from "@chainsafe/libp2p-gossipsub";
+import type { Identify } from "@libp2p/identify";
+
 import { type Transport } from "@libp2p/interface/transport";
 import { RecursivePartial } from "@libp2p/interface";
 import { Components } from "libp2p/components";
@@ -72,7 +72,7 @@ export class ExportableX25519PublicKey extends X25519PublicKey implements Abstra
         JSON.stringify({
           crv: this.curve,
           kty: "OKP",
-          x: Buffer.from(this.getEncoded()).toString('base64url'),
+          x: Buffer.from(this.getEncoded()).toString(),
         })
       );
     }
@@ -90,8 +90,8 @@ export class ExportableX25519PrivateKey extends X25519PrivateKey implements Abst
         JSON.stringify({
           crv: this.curve,
           kty: "OKP",
-          x: Buffer.from(this.publicKey().getEncoded()).toString('base64url'),
-          d: Buffer.from(this.getEncoded()).toString('base64url'),
+          x: Buffer.from(this.publicKey().getEncoded()).toString(),
+          d: Buffer.from(this.getEncoded()).toString(),
         })
       );
     }
@@ -158,8 +158,7 @@ export type DIDFactoryAbstract = {
 };
 
 export type DEFAULT_SERVICES = {
-  pubsub?: PubSub<GossipsubEvents>;
-  identify?: unknown;
+  identify?: Identify;
   autoNAT?: unknown;
   dcutr?: unknown;
 };

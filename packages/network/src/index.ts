@@ -1,11 +1,10 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 import { Libp2p, createLibp2p } from "libp2p";
-import { generateKeyPair, supportedKeys } from "@libp2p/crypto/keys";
+import { supportedKeys } from "@libp2p/crypto/keys";
 import { peerIdFromKeys } from "@libp2p/peer-id";
 import { type PeerId } from "@libp2p/interface-peer-id";
 import { pipe } from "it-pipe";
 import { yamux } from "@chainsafe/libp2p-yamux";
-import { mplex } from "@libp2p/mplex";
 import { noise } from "@chainsafe/libp2p-noise";
 import type { StreamHandler } from "@libp2p/interface/stream-handler";
 import { Multiaddr } from "@multiformats/multiaddr";
@@ -36,6 +35,7 @@ import {
   createX25519PublicKeyFromEd25519PublicKey,
 } from "@djack-sdk/did-peer";
 import { didUrlFromString } from "@djack-sdk/shared";
+import { Connection, Stream } from "@libp2p/interface";
 
 export * from "./Task";
 export { AnoncredsLoader } from '@atala/prism-wallet-sdk';
@@ -134,18 +134,17 @@ export class Network<T extends Record<string, unknown> = DEFAULT_SERVICES> {
   }
 
   private static async generateKeyPair(): Promise<Domain.KeyPair> {
-    const prv = await generateKeyPair("Ed25519");
-
-    const ed25519Prv = new ExportableEd25519PrivateKey(prv.marshal());
-
-    const ed25519Pub = new ExportableEd25519PublicKey(prv.public.marshal());
-
+    const priv = apollo.createPrivateKey({
+      type: Domain.KeyTypes.EC,
+      curve: Domain.Curve.ED25519,
+    });
+    const ed25519Prv = new ExportableEd25519PrivateKey(priv.raw);
+    const ed25519Pub = new ExportableEd25519PublicKey(priv.publicKey().raw);
     const ed25519KeyPair: Domain.KeyPair = {
       curve: Domain.Curve.ED25519,
       privateKey: ed25519Prv,
       publicKey: ed25519Pub,
     };
-
     return ed25519KeyPair;
   }
 
@@ -175,17 +174,20 @@ export class Network<T extends Record<string, unknown> = DEFAULT_SERVICES> {
     } = options;
 
     const ed25519KeyPair = keyPair ? keyPair : await this.generateKeyPair();
-
     const x25519KeyPair: Domain.KeyPair =
       createX25519FromEd25519KeyPair(ed25519KeyPair);
 
+    const supportedPublicKey = new supportedKeys.ed25519.Ed25519PublicKey(ed25519KeyPair.publicKey.raw)
+    const supportedPrivateKey = new supportedKeys.ed25519.Ed25519PrivateKey(
+      Buffer.from([
+        ...ed25519KeyPair.privateKey.raw,
+        ...ed25519KeyPair.publicKey.raw
+      ]),
+      Buffer.from(ed25519KeyPair.publicKey.raw)
+    )
     const peerId = await peerIdFromKeys(
-      new supportedKeys.ed25519.Ed25519PublicKey(ed25519KeyPair.publicKey.raw)
-        .bytes,
-      new supportedKeys.ed25519.Ed25519PrivateKey(
-        ed25519KeyPair.privateKey.raw,
-        ed25519KeyPair.publicKey.raw
-      ).bytes
+      Buffer.from(supportedPublicKey.bytes),
+      Buffer.from(supportedPrivateKey.bytes)
     );
 
     const keyPairs = [ed25519KeyPair, x25519KeyPair];
@@ -201,7 +203,6 @@ export class Network<T extends Record<string, unknown> = DEFAULT_SERVICES> {
       this.getServicesForPeerDID(peerId)
     )
 
-
     for (const priv of privateKeys) {
       await storage.store.addDIDKey(did, peerId, priv);
       await storage.store.addDIDKey(peerDID, peerId, priv);
@@ -213,7 +214,7 @@ export class Network<T extends Record<string, unknown> = DEFAULT_SERVICES> {
       addresses: {
         listen: listen,
       },
-      streamMuxers: [yamux(), mplex()],
+      streamMuxers: [yamux()],
       transports: options.transports,
       connectionEncryption: [noise()],
       connectionGater: {
@@ -306,7 +307,7 @@ export class Network<T extends Record<string, unknown> = DEFAULT_SERVICES> {
     return Network.getServicesForPeerDID(peerId);
   }
 
-  get peer() {
+  get peer(): PeerId | null {
     if (!this.p2p) return null;
     return this.p2p.peerId;
   }
@@ -620,7 +621,7 @@ export class Network<T extends Record<string, unknown> = DEFAULT_SERVICES> {
   public async dialProtocol(
     peer: PeerId | Multiaddr | Multiaddr[],
     protocols: string | string[]
-  ) {
+  ): Promise<Stream> {
     const dial = {
       from: this.peer?.toString(),
       to: peer.toString(),
@@ -633,7 +634,7 @@ export class Network<T extends Record<string, unknown> = DEFAULT_SERVICES> {
     return connection.newStream(protocols, { runOnTransientConnection: true });
   }
 
-  public async dial(peer: any) {
+  public async dial(peer: PeerId | Multiaddr | Multiaddr[]): Promise<Connection> {
     return this.p2p.dial(peer, { signal: this.abortController.signal });
   }
 

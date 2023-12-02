@@ -15,7 +15,7 @@ import { createX25519PublicKeyFromEd25519PublicKey } from '@djack-sdk/did-peer';
 import {ExportFormats, ExportableEd25519PublicKey} from '@djack-sdk/interfaces';
 import { Domain } from "@atala/prism-wallet-sdk";
 import { useLocation, useNavigate } from "react-router-dom";
-
+import { DB } from "../utils/DB";
 
 const AppTemplate: React.FC = () => {
   const connectingTaskAbort = useMemo(() => new AbortController(), []);
@@ -58,7 +58,7 @@ const AppTemplate: React.FC = () => {
             } = exports;
             if (address && spendPubKey) {
               const { pubKeyHex } = spendPubKey;
-  
+              debugger;
               const pub = Buffer.from(pubKeyHex, "hex");
               const ed25519 = new ExportableEd25519PublicKey(pub);
               const ed25519JWK = ed25519.export(ExportFormats.JWK);
@@ -74,16 +74,13 @@ const AppTemplate: React.FC = () => {
                 ed25519JWK
               ).toString("hex")}`)
   
-              import("../utils/DB").then(({DB}) => {
-                mounted.loadNode({
-                  listen: [],
-                  db: new DB(name, pass),
-                  abort: connectingTaskAbort,
-                  publicKeys,
-                  name,
-                });
-              })
-             
+              mounted.loadNode({
+                listen: [],
+                db: new DB(name, pass),
+                abort: connectingTaskAbort,
+                publicKeys,
+                name,
+              });
             }
           });
       } else if (
@@ -100,9 +97,6 @@ const AppTemplate: React.FC = () => {
             const {
               djack: { usingCurrentAddress },
             } = exports;
-  
-            
-  
             if (usingCurrentAddress) {
               const peerAddress = process.env.NEXT_PUBLIC_RELAY;
               const peerAddressParts = peerAddress!.split("/");
@@ -151,22 +145,23 @@ const AppTemplate: React.FC = () => {
         !mounted.isNodeLoading &&
         !mounted.node
       ) {
+        debugger;
         const ed25519 = session.publicKeys.find(
           ({ curve }) => curve === Domain.Curve.ED25519
         )!;
+        debugger;
         const ed25519JWK = ed25519.export(ExportFormats.JWK);
         const pass = sha256( `djack:${name.replace("djack:", "")}:${Buffer.from(
           ed25519JWK
         ).toString("hex")}`)
-          import("../utils/DB").then(({DB}) => {
-            mounted.loadNode({
-              listen: [],
-              db: new DB(name, pass),
-              abort: connectingTaskAbort,
-              publicKeys,
-              name,
-            });
-          });
+
+        mounted.loadNode({
+          listen: [],
+          db: new DB(name, pass),
+          abort: connectingTaskAbort,
+          publicKeys,
+          name,
+        });
         
       }
     
