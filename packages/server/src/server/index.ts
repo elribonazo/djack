@@ -89,7 +89,8 @@ export class Server<T extends Record<string, unknown>> {
       ],
     });
 
-    http.enableStatic("../../frontend/out");
+    const staticWebsitePath = process.env.STATIC_WEBSITE_PATH || "../../frontend/build"
+    http.enableStatic(staticWebsitePath);
 
     const filter =
       process.env.FILTER && process.env.FILTER === "dns"

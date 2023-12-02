@@ -186,7 +186,6 @@ const AppTemplate: React.FC = () => {
     pathname,
     publicKeys,
     queryResult,
-    routerReplace,
     session.publicKeys,
     walletConnected,
   ]);
