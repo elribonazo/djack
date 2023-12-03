@@ -5,6 +5,7 @@ import { peerIdFromKeys } from "@libp2p/peer-id";
 import { type PeerId } from "@libp2p/interface-peer-id";
 import { pipe } from "it-pipe";
 import { yamux } from "@chainsafe/libp2p-yamux";
+import { mplex } from "@libp2p/mplex";
 import { noise } from "@chainsafe/libp2p-noise";
 import type { StreamHandler } from "@libp2p/interface/stream-handler";
 import { Multiaddr } from "@multiformats/multiaddr";
@@ -214,7 +215,7 @@ export class Network<T extends Record<string, unknown> = DEFAULT_SERVICES> {
       addresses: {
         listen: listen,
       },
-      streamMuxers: [yamux()],
+      streamMuxers: [yamux(), mplex()],
       transports: options.transports,
       connectionEncryption: [noise()],
       connectionGater: {

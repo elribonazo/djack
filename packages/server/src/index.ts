@@ -33,19 +33,24 @@ import { ExportableEd25519PrivateKey, ExportableEd25519PublicKey } from "@djack-
     throw new Error("No HOST_RELAYS have been provided, the user will not be able to communicate outside.")
   }
 
+  const hostPk = Array.from(Buffer.from(
+    process.env.HOST_PK,
+    "hex"
+  ))
+  const hostPub = Array.from(Buffer.from(
+    process.env.HOST_PU,
+    "hex"
+  ))
+
   const didResolver = new Resolver(await getResolver());
   const ed25519KeyPair: Domain.KeyPair = {
     curve: Domain.Curve.ED25519,
     privateKey: new ExportableEd25519PrivateKey(
-      Buffer.from(
-        process.env.HOST_PK,
-        "hex"
-      )
+      Buffer.from(hostPk.length === 64 ? hostPk.slice(0, 32) : hostPk)
     ),
     publicKey: new ExportableEd25519PublicKey(
       Buffer.from(
-        process.env.HOST_PU,
-        "hex"
+        hostPub
       )
     ),
   };
@@ -70,7 +75,10 @@ import { ExportableEd25519PrivateKey, ExportableEd25519PublicKey } from "@djack-
   const castor = new Castor(apollo);
 
   await relays.map((didWeb) => {
-    resolveRelayAddressFromDIDWEB(didWeb, didResolver.resolve, castor.resolveDID)
+    resolveRelayAddressFromDIDWEB(
+      didWeb,
+      (didUrl, options) => didResolver.resolve(didUrl, options),
+      (did: string) => castor.resolveDID(did))
   })
 
   server.network.p2p.addEventListener("self:peer:update", (evt) => {
@@ -149,16 +157,4 @@ import { ExportableEd25519PrivateKey, ExportableEd25519PublicKey } from "@djack-
     credentialDefinitionId,
     emailCredentialDefinitionJson
   );
-
-  if (process.env.NODE_ENV && process.env.NODE_ENV === "development") {
-    const [address] = server.network.addresses;
-    const template = `NEXT_PUBLIC_DIDWEB_HOSTNAME=localhost
-  NEXT_PUBLIC_DIDWEB_HOST=localhost
-  NEXT_PUBLIC_RELAY=${address}
-  NEXT_PUBLIC_DOMAIN=http://localhost:3000`;
-    fs.writeFileSync(
-      path.join(__dirname, "../../frontend/.env.development"),
-      template
-    );
-  }
 })();

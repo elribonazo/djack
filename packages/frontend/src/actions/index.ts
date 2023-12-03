@@ -360,6 +360,7 @@ export const loadNode = createAsyncThunk<
 
     node.onPeerDiscovery = async ({ id, multiaddrs, protocols }) => {
       try {
+        console.log("Discovering ", id)
         if (node.isValidServiceProvider(protocols)) {
           dispatch(reduxActions.discoverySuccess(id));
           await node.p2p.peerStore.save(id, {
@@ -498,6 +499,7 @@ export const loadNode = createAsyncThunk<
     };
 
     node.p2p.addEventListener("peer:identify", ({ detail }) => {
+      console.log("Identify2", detail)
       const listenerAddress = detail.listenAddrs;
       node.onPeerDiscovery!({
         id: detail.peerId,

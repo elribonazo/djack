@@ -22,7 +22,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@atala/prism-wallet-sdk": "file:../../../../iohk/atala-prism-wallet-sdk-ts"
+    "@atala/prism-wallet-sdk": "file:../../atala-prism-wallet-sdk-3.1.0.tgz"
   },
   "devDependencies": {
     "@chainsafe/libp2p-gossipsub": "^10.1.1",

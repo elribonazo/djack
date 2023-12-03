@@ -28,10 +28,8 @@ try {
         defaultInitState.session = {
           publicKeys: keysJSON.publicKeys.map((publicKeyJWK) => {
             if (publicKeyJWK.crv === "Ed25519") {
-              debugger;
               return new ExportableEd25519PublicKey(base64url.baseDecode(publicKeyJWK.x));
             }
-            debugger;
             return new ExportableX25519PublicKey(base64url.baseDecode(publicKeyJWK.x));
           }),
         };

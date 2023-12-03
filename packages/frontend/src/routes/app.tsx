@@ -58,7 +58,6 @@ const AppTemplate: React.FC = () => {
             } = exports;
             if (address && spendPubKey) {
               const { pubKeyHex } = spendPubKey;
-              debugger;
               const pub = Buffer.from(pubKeyHex, "hex");
               const ed25519 = new ExportableEd25519PublicKey(pub);
               const ed25519JWK = ed25519.export(ExportFormats.JWK);
@@ -145,11 +144,9 @@ const AppTemplate: React.FC = () => {
         !mounted.isNodeLoading &&
         !mounted.node
       ) {
-        debugger;
         const ed25519 = session.publicKeys.find(
           ({ curve }) => curve === Domain.Curve.ED25519
         )!;
-        debugger;
         const ed25519JWK = ed25519.export(ExportFormats.JWK);
         const pass = sha256( `djack:${name.replace("djack:", "")}:${Buffer.from(
           ed25519JWK

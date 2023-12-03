@@ -3,6 +3,8 @@
     "version": "0.1.0",
     "private": true,
     "scripts": {
+        "postinstall": "npm run copy-wasm",
+        "copy-wasm": "cp ../../node_modules/@atala/prism-wallet-sdk/build/browser/*.wasm public",
         "clean": "rm -rf build",
         "start": "npx craco start",
         "build": "npx craco build",
@@ -27,7 +29,7 @@
         "url": "^0.11.0"
     },
     "dependencies": {
-        "@atala/prism-wallet-sdk": "file:../../../../iohk/atala-prism-wallet-sdk-ts",
+        "@atala/prism-wallet-sdk": "file:../../atala-prism-wallet-sdk-3.1.0.tgz",
         "@djack-sdk/interfaces": "^0.1.15",
         "@djack-sdk/network": "^0.1.17",
         "@djack-sdk/shared": "^0.1.16",

@@ -36,7 +36,11 @@ export default class HTTP {
   public server: https.Server | http.Server;
   public websocket: WebsocketServer;
 
-  constructor(private app: Express, options: HTTPServerOptions) {
+  get isSecure() {
+    return this.server instanceof https.Server
+  }
+
+  constructor(public app: Express, options: HTTPServerOptions) {
     console.log("HttpServer", options)
     const { cert, key } = options;
     this.server =
@@ -86,8 +90,12 @@ export default class HTTP {
   }
 
   enableStatic(staticPath: string) {
-    console.log("enabling path ", path.join(__dirname, staticPath));
-    this.app.use(express.static(path.join(__dirname, staticPath)));
+    console.log("enabling path ", staticPath);
+    this.app.use(express.static(staticPath));
+    /* final catch-all route to index.html defined last */
+    this.app.get('/*', (req, res) => {
+      res.sendFile(`${staticPath}/index.html`);
+    })
   }
 
   static create(options: CreateHttpOptions) {

@@ -7,7 +7,7 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "concurrently --kill-others \"lerna watch  -- lerna run dev  --scope=\\$LERNA_PACKAGE_NAME\" \"cd packages/frontend && npm run start\"",
-    "clean": "npm run clean --workspaces",
+    "clean": "npm run clean --workspaces && npm run clean-install && rm -rf node_modules",
     "clean-install": "lerna clean -y",
     "build": "lerna run build --include-dependencies",
     "release": "npm run release:packages && npm run release:docker",

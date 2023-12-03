@@ -16,11 +16,23 @@
     "emitDeclarationOnly": true,
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
-    "lib": ["es2020", "dom", "dom.iterable", "esnext"],
+    "lib": [
+      "es2020",
+      "dom",
+      "dom.iterable",
+      "esnext"
+    ],
     "moduleResolution": "node",
-    "typeRoots": ["node_modules/@types"],
+    "typeRoots": [
+      "node_modules/@types"
+    ],
     "jsx": "react-jsx"
   },
-  "include": ["./src", "src/email"],
-  "exclude": ["node_modules"]
+  "include": [
+    "./src",
+    "src/email"
+  ],
+  "exclude": [
+    "node_modules"
+  ]
 }

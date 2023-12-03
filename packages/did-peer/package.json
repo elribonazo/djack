@@ -19,7 +19,7 @@
     "prepublishOnly": "npm run build"
   },
   "dependencies": {
-    "@atala/prism-wallet-sdk": "file:../../../../iohk/atala-prism-wallet-sdk-ts",
+    "@atala/prism-wallet-sdk": "file:../../atala-prism-wallet-sdk-3.1.0.tgz",
     "@djack-sdk/interfaces": "^0.1.15",
     "@djack-sdk/shared": "^0.1.16",
     "@libp2p/crypto": "^3.0.1",

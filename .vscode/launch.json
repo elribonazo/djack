@@ -17,6 +17,7 @@
         "${workspaceFolder}/packages/server/build/**/*.js"
       ],
       "env": {
+        "NODE_TLS_REJECT_UNAUTHORIZED": "0",
         "HTTP_PORT": "8081",
         // "DEBUG": "libp2p:*",
         "NODE_ENV": "development",
@@ -24,8 +25,8 @@
         "PUBLIC_DIDWEB_HOST": "localhost",
         //Add your email @ local ip address
         "TEST_EMAIL": "javier@localhost",
-        "HOST_RELAYS": "did:web:barcelona.djack.email,did:web:panama.djack.email",
-        "HOST_PK": "6c7cc267280c106a2f6884f00ac29b332996a65d032fcf9a94b169f64a7391751a45c2f6ae0a559081cdcac64f05040a6e652ce611d07cf72bc37232647d64d0",
+        "HOST_RELAYS": "did:web:localhost%3A8080",
+        "HOST_PK": "6c7cc267280c106a2f6884f00ac29b332996a65d032fcf9a94b169f64a739175",
         "HOST_PU": "1a45c2f6ae0a559081cdcac64f05040a6e652ce611d07cf72bc37232647d64d0",
         "SSL_CERT_PATH": "./.tls/server.crt",
         "SSL_KEY_PATH": "./.tls/server.key"
@@ -41,10 +42,13 @@
       "console": "integratedTerminal",
       "program": "${workspaceFolder}/packages/signal/build/index.js",
       "env": {
+        "DID_WEB": "did:web:localhost%3A8080",
         "FILTER": "all",
         "pk": "e4d6d89de38c8159c52edc720e7bfed1ea121a46ea1b7b3fc5a0124119b2068d2bf8dcc92f59653642e14a7b1a8b97104f3585f95c31efd55b6259ec9f116b61",
         "pu": "2bf8dcc92f59653642e14a7b1a8b97104f3585f95c31efd55b6259ec9f116b61",
-        "announce": "/ip4/127.0.0.1/tcp/8080/ws/p2p/12D3KooWCn1o4hxxQKeMS3rQCwbghHVQ145EUTg2pi9PUNP4DRBn"
+        "announce": "/ip4/127.0.0.1/tcp/8080/wss/p2p/12D3KooWCn1o4hxxQKeMS3rQCwbghHVQ145EUTg2pi9PUNP4DRBn",
+        "SSL_CERT_PATH": "./.tls/signal.crt",
+        "SSL_KEY_PATH": "./.tls/signal.key"
       }
     }
   ]

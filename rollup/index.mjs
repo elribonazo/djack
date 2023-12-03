@@ -1,5 +1,4 @@
 import typescript from "rollup-plugin-typescript2";
-
 import cleanup from "rollup-plugin-cleanup";
 import ignore from "rollup-plugin-ignore";
 import json from "@rollup/plugin-json";
@@ -12,7 +11,6 @@ const externals = [
   "http",
   "@atala/prism-wallet-sdk",
   "@emurgo/cardano-serialization-lib-nodejs",
-  "@scure/bip39",
   "@hyperledger/anoncreds-nodejs",
   "@libp2p/websockets",
   "libp2p/ping",
@@ -85,6 +83,9 @@ export default function CreateConfig(
       name: "djackp2p",
     },
     plugins: [
+
+      ...plugins,
+      commonjs(),
       jsccPlugin({ values: { _ANONCREDS: false } }),
       ignore(externals),
       json(),
@@ -96,8 +97,7 @@ export default function CreateConfig(
           },
         },
       }),
-      ...plugins,
-      commonjs(),
+
       cleanup(),
     ],
     external: externals,

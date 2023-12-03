@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 import { SMTPServer } from "smtp-server";
+import path from 'path';
 import { Network } from "@djack-sdk/network";
 import { DIDFactory } from "@djack-sdk/did-peer";
 import { PROTOCOLS } from "@djack-sdk/interfaces";
@@ -21,14 +22,12 @@ import { ping } from "@libp2p/ping";
 import { fileURLToPath } from "url";
 
 import { circuitRelayTransport } from "@libp2p/circuit-relay-v2";
-
 import { kadDHT } from "@libp2p/kad-dht";
 import { autoNAT } from "@libp2p/autonat";
 import { dcutr } from "@libp2p/dcutr";
 import { ipnsSelector } from "ipns/selector";
 import { ipnsValidator } from "ipns/validator";
 import { webRTCDirect, webRTC } from "@libp2p/webrtc";
-import path from "path";
 import HTTP from "@djack-sdk/signal/build/http";
 import { createCredentialDefinitionRoute } from "../http/routes/credentialDefinitions";
 import { createCredentialSchemaRoute } from "../http/routes/credentialSchema";
@@ -88,7 +87,8 @@ export class Server<T extends Record<string, unknown>> {
       ],
     });
 
-    const staticWebsitePath = process.env.STATIC_WEBSITE_PATH || "../../frontend/build"
+    const staticWebsitePath = process.env.STATIC_WEBSITE_PATH || path.resolve(__dirname, "../../frontend/build")
+    console.log("Resolving FE from ", staticWebsitePath)
     http.enableStatic(staticWebsitePath);
 
     const filter =

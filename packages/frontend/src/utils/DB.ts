@@ -244,14 +244,11 @@ export class DB implements AbstractStore {
 
   private async toKey(dbKey: dbKey) {
     const raw = Buffer.from(dbKey.rawHex, "hex");
-    debugger;
     const type = dbKey.type;
     const { Domain } = await import("@atala/prism-wallet-sdk")
     if (type === Domain.Curve.ED25519) {
-      debugger;
       return new ExportableEd25519PrivateKey(raw);
     } else if (type === Domain.Curve.X25519) {
-      debugger;
       return new ExportableX25519PrivateKey(raw);
     }
     throw new Error("Not implemented");

@@ -1,5 +1,6 @@
 import { noise } from "@chainsafe/libp2p-noise";
 import { yamux } from "@chainsafe/libp2p-yamux";
+import fs from 'fs';
 import { mplex } from "@libp2p/mplex";
 import { webSockets } from "@libp2p/websockets";
 import { createLibp2p } from "libp2p";
@@ -18,7 +19,6 @@ import { Service } from "didcomm-node";
 import { Domain, Castor, Apollo } from '@atala/prism-wallet-sdk';
 import { AbstractExportingKey, ExportFormats, ExportableEd25519PrivateKey, ExportableEd25519PublicKey } from "@djack-sdk/interfaces";
 import { kadDHT } from "@libp2p/kad-dht";
-
 import { autoNAT } from "@libp2p/autonat";
 import { dcutr } from "@libp2p/dcutr";
 import { ping } from "@libp2p/ping";
@@ -27,9 +27,10 @@ import { ipnsValidator } from "ipns/validator";
 
 import HTTP from "./http.js";
 
+
 const signalingPort = parseInt(`${process.env.PORT || 8080}`);
 const signalingHost = process.env.HOST || "0.0.0.0";
-const domain = process.env.PUBLIC_DOMAIN || 'localhost';
+const domain = process.env.PUBLIC_DOMAIN || encodeURIComponent(`localhost:${signalingPort}`);
 
 function getStartupKeys() {
   const pk = process.env.pk;
@@ -55,8 +56,14 @@ const createHttpForPeerId = (
   peerId: PeerId,
   peerDID: Domain.DID,
   didWeb: string,
-) =>
-  HTTP.create({
+) => {
+  if (!process.env.SSL_CERT_PATH ||
+    !process.env.SSL_KEY_PATH) {
+    throw new Error("Please specify valid crt (SSL_CERT_PATH) and key (SSL_KEY_PATH) ssl certificate env variables.")
+  }
+  const server = HTTP.create({
+    key: fs.readFileSync(process.env.SSL_KEY_PATH),
+    cert: fs.readFileSync(process.env.SSL_CERT_PATH),
     routes: [
       {
         method: "get",
@@ -152,26 +159,28 @@ const createHttpForPeerId = (
                 </div>
             </body>
           </html>`);
-
-
         },
       },
     ],
   });
+  return server;
+};
 
+const edPk = Array.from(Buffer.from(pk, "hex"))
 const ed25519KeyPair: Domain.KeyPair = {
   curve: Domain.Curve.ED25519,
-  privateKey: new ExportableEd25519PrivateKey(Buffer.from(pk, "hex")),
+  privateKey: new ExportableEd25519PrivateKey(Buffer.from(edPk.slice(0, 32))),
   publicKey: new ExportableEd25519PublicKey(Buffer.from(pu, "hex")),
 };
 
 const x25519KeyPair = createX25519FromEd25519KeyPair(ed25519KeyPair);
-
-
 const peerId = await peerIdFromKeys(
   new supportedKeys.ed25519.Ed25519PublicKey(ed25519KeyPair.publicKey.raw).bytes,
   new supportedKeys.ed25519.Ed25519PrivateKey(
-    ed25519KeyPair.privateKey.raw,
+    Buffer.concat([
+      ed25519KeyPair.privateKey.raw,
+      ed25519KeyPair.publicKey.raw
+    ]),
     ed25519KeyPair.publicKey.raw
   ).bytes
 );
@@ -204,11 +213,14 @@ const filter =
     ? filters.dnsWss
     : filters.all;
 
-const listenAddress = `/ip4/${signalingHost}/tcp/${signalingPort}/ws`;
-const didweb = `did:web:${domain}`;
-console.log("Starting with ", { pk, pu, peerId, peerDID, announce, listenAddress })
+const didweb = process.env.DID_WEB || `did:web:${domain}`;
+console.log("Starting with ", { pk, pu, peerId, peerDID, announce })
 
 const http = createHttpForPeerId(peerId, peerDID, didweb);
+
+const protocol = http.isSecure ? 'wss' : 'ws';
+const listenAddress = `/ip4/${signalingHost}/tcp/${signalingPort}/${protocol}`;
+
 const websockets = webSockets({
   websocket: http.websocket._opts,
   server: http.server,
@@ -226,7 +238,6 @@ const relayNode = await createLibp2p({
   streamMuxers: [yamux(), mplex()],
   services: {
     identify: identify(),
-    //TODO find out which of this services is causing the CPU to go up
     autoNAT: autoNAT(),
     dcutr: dcutr(),
     dht: kadDHT({

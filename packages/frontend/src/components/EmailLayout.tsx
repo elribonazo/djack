@@ -119,7 +119,7 @@ const EmailLayout = () => {
                   </h3>
                   <div className="mt-2">
                     <p className="text-sm text-gray-500">
-                      There was an error processing your request.
+                      {error.message}
                     </p>
                   </div>
                 </div>
